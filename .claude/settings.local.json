@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\lukab\\\\doago\" -Recurse -Directory -ErrorAction SilentlyContinue | Select-Object -First 100 | ForEach-Object { $_.FullName } | Sort-Object)"
+    ]
+  }
+}

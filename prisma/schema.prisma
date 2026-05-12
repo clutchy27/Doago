@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  ime       String
+  email     String   @unique
+  geslo     String
+  vloga     String   @default("narocnik")
+  createdAt DateTime @default(now())
+  naloge    Naloga[]
+}
+
+model Naloga {
+  id         String   @id @default(cuid())
+  naslov     String
+  opis       String
+  cena       Float
+  kategorija String
+  status     String   @default("odprta")
+  createdAt  DateTime @default(now())
+  narocnik   User     @relation(fields: [narocnikId], references: [id])
+  narocnikId String
+}
