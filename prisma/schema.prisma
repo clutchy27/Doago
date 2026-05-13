@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
 
@@ -9,24 +9,39 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  ime       String
-  email     String   @unique
-  geslo     String
-  vloga     String   @default("narocnik")
-  createdAt DateTime @default(now())
-  naloge    Naloga[]
+  id                 String      @id @default(cuid())
+  ime                String
+  email              String      @unique
+  geslo              String
+  vloga              String      @default("narocnik")
+  createdAt          DateTime    @default(now())
+  nalogaKotNarocnik  Naloga[]    @relation("NarocnikNaloge")
+  nalogaKotIzvajalec Naloga[]    @relation("IzvajalecNaloge")
+  sporocila          Sporocilo[]
 }
 
 model Naloga {
-  id         String   @id @default(cuid())
-  naslov     String
-  opis       String
-  cena       Float
-  kategorija String
-  lokacija   String
-  status     String   @default("odprta")
-  createdAt  DateTime @default(now())
-  narocnik   User     @relation(fields: [narocnikId], references: [id])
-  narocnikId String
+  id          String      @id @default(cuid())
+  naslov      String
+  opis        String
+  cena        Float
+  kategorija  String
+  lokacija    String
+  status      String      @default("odprta")
+  createdAt   DateTime    @default(now())
+  narocnik    User        @relation("NarocnikNaloge", fields: [narocnikId], references: [id])
+  narocnikId  String
+  izvajalec   User?       @relation("IzvajalecNaloge", fields: [izvajalecId], references: [id])
+  izvajalecId String?
+  sporocila   Sporocilo[]
+}
+
+model Sporocilo {
+  id        String   @id @default(cuid())
+  besedilo  String
+  createdAt DateTime @default(now())
+  avtor     User     @relation(fields: [avtorId], references: [id])
+  avtorId   String
+  naloga    Naloga   @relation(fields: [nalogaId], references: [id])
+  nalogaId  String
 }

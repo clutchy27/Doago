@@ -119,7 +119,8 @@ export default function NalogePage() {
             {filtered.map((n) => (
               <div
                 key={n.id}
-                className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200"
+                onClick={() => router.push(`/naloge/${n.id}`)}
+                className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200 cursor-pointer"
               >
                 <div className="flex-1 min-w-0 mr-4">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -137,7 +138,7 @@ export default function NalogePage() {
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <span className="text-orange-500 font-bold text-lg">{n.cena} €</span>
                   <button
-                    onClick={() => sprejmi(n.id, n.naslov)}
+                    onClick={(e) => { e.stopPropagation(); sprejmi(n.id, n.naslov); }}
                     disabled={sprejemam === n.id}
                     className="text-sm bg-orange-500 text-white px-4 py-1.5 rounded-xl hover:bg-orange-600 transition-all duration-150 disabled:opacity-50 whitespace-nowrap hover:shadow-md hover:shadow-orange-500/20"
                   >

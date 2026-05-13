@@ -243,7 +243,8 @@ export default function Dashboard() {
                 {naloge.map((n) => (
                   <div
                     key={n.id}
-                    className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200"
+                    onClick={() => router.push(`/naloge/${n.id}`)}
+                    className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200 cursor-pointer"
                   >
                     <div className="flex-1 min-w-0 mr-4">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -262,7 +263,7 @@ export default function Dashboard() {
                       <span className="text-orange-500 font-bold text-lg whitespace-nowrap">{n.cena} €</span>
                       {n.status === "sprejeta" && (
                         <button
-                          onClick={() => placaj(n.id)}
+                          onClick={(e) => { e.stopPropagation(); placaj(n.id); }}
                           disabled={placam === n.id}
                           className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1.5 rounded-xl hover:bg-purple-500/20 transition-all duration-150 whitespace-nowrap disabled:opacity-50 flex items-center gap-1.5"
                         >
@@ -274,7 +275,7 @@ export default function Dashboard() {
                       )}
                       {n.status === "plačano" && (
                         <button
-                          onClick={() => oznaci(n)}
+                          onClick={(e) => { e.stopPropagation(); oznaci(n); }}
                           className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-xl hover:bg-green-500/20 transition-all duration-150 whitespace-nowrap"
                         >
                           Oceni izvajalca
@@ -326,7 +327,8 @@ export default function Dashboard() {
                 {naloge.map((n) => (
                   <div
                     key={n.id}
-                    className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200"
+                    className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200 cursor-pointer"
+                    onClick={() => router.push(`/naloge/${n.id}`)}
                   >
                     <div className="flex-1 min-w-0 mr-4">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -345,7 +347,7 @@ export default function Dashboard() {
                     <div className="flex flex-col items-end gap-2 ml-4 shrink-0">
                       <span className="text-orange-500 font-bold text-lg whitespace-nowrap">{n.cena} €</span>
                       <button
-                        onClick={() => sprejmi(n.id, n.naslov)}
+                        onClick={(e) => { e.stopPropagation(); sprejmi(n.id, n.naslov); }}
                         disabled={sprejemam === n.id}
                         className="text-sm bg-blue-500 text-white px-4 py-1.5 rounded-xl hover:bg-blue-600 transition-all duration-150 whitespace-nowrap disabled:opacity-50"
                       >

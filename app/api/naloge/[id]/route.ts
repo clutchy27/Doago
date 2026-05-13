@@ -17,6 +17,42 @@ const initPromise = Promise.all([
   `),
 ]).catch((err) => console.error("[init] error:", err));
 
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  await initPromise;
+  try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) return NextResponse.json({ error: "Ni avtorizacije" }, { status: 401 });
+
+    const { id } = await params;
+
+    const { rows } = await pool.query(
+      `SELECT n.*,
+              u_n.ime AS "narocnikIme",
+              u_i.ime AS "izvajalecIme"
+       FROM "Naloga" n
+       JOIN "User" u_n ON u_n.id = n."narocnikId"
+       LEFT JOIN "User" u_i ON u_i.id = n."izvajalecId"
+       WHERE n.id = $1`,
+      [id]
+    );
+
+    if (rows.length === 0) return NextResponse.json({ error: "Naloga ne obstaja" }, { status: 404 });
+
+    const { narocnikIme, izvajalecIme, ...rest } = rows[0];
+    return NextResponse.json({
+      ...rest,
+      narocnik: { ime: narocnikIme },
+      izvajalec: izvajalecIme ? { ime: izvajalecIme } : null,
+    });
+  } catch (err) {
+    console.error("[GET /api/naloge/[id]]", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
