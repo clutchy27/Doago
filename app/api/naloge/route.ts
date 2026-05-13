@@ -10,6 +10,7 @@ const initPromise = pool.query(`
     opis        TEXT NOT NULL,
     cena        DOUBLE PRECISION NOT NULL,
     kategorija  TEXT NOT NULL,
+    lokacija    TEXT NOT NULL DEFAULT '',
     status      TEXT NOT NULL DEFAULT 'odprta',
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "narocnikId" TEXT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE
@@ -59,20 +60,20 @@ export async function POST(req: NextRequest) {
     const userId = (token.sub ?? token.id) as string;
 
     const body = await req.json();
-    const { naslov, opis, kategorija } = body;
+    const { naslov, opis, kategorija, lokacija } = body;
     const cena = typeof body.cena === "string" ? parseFloat(body.cena) : Number(body.cena);
 
-    if (!naslov || !opis || !kategorija || isNaN(cena) || cena < 0) {
+    if (!naslov || !opis || !kategorija || !lokacija || isNaN(cena) || cena < 0) {
       return NextResponse.json({ error: "Vsa polja so obvezna" }, { status: 400 });
     }
 
     const id = crypto.randomUUID();
 
     const { rows } = await pool.query(
-      `INSERT INTO "Naloga" (id, naslov, opis, cena, kategorija, "narocnikId")
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO "Naloga" (id, naslov, opis, cena, kategorija, lokacija, "narocnikId")
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [id, naslov, opis, cena, kategorija, userId]
+      [id, naslov, opis, cena, kategorija, lokacija, userId]
     );
 
     // Send confirmation email (fire-and-forget)

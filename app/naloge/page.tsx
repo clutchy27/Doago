@@ -10,6 +10,7 @@ type Naloga = {
   opis: string;
   cena: number;
   kategorija: string;
+  lokacija: string;
   status: string;
   createdAt: string;
   narocnik?: { ime: string };
@@ -128,9 +129,10 @@ export default function NalogePage() {
                     </span>
                   </div>
                   <p className="text-gray-500 text-sm mb-2 line-clamp-2">{n.opis}</p>
-                  {n.narocnik && (
-                    <span className="text-xs text-gray-600">Naročnik: {n.narocnik.ime}</span>
-                  )}
+                  <div className="flex gap-3 text-xs text-gray-600 flex-wrap">
+                    {n.lokacija && <span>{n.lokacija}</span>}
+                    {n.narocnik && <span>Naročnik: {n.narocnik.ime}</span>}
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <span className="text-orange-500 font-bold text-lg">{n.cena} €</span>

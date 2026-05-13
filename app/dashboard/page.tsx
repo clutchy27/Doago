@@ -10,6 +10,7 @@ type Naloga = {
   opis: string;
   cena: number;
   kategorija: string;
+  lokacija: string;
   status: string;
   createdAt: string;
   narocnik?: { ime: string };
@@ -27,6 +28,7 @@ type OcenjevanjeState = { nalogaId: string; naslov: string } | null;
 type Pogled = "narocnik" | "izvajalec";
 
 const KATEGORIJE = ["Hišna opravila", "Prevoz", "IT pomoč", "Pouk", "Vrtnarjenje", "Drugo"];
+const MESTA = ["Ljubljana", "Maribor", "Celje", "Kranj", "Velenje", "Koper", "Novo mesto", "Ptuj", "Murska Sobota", "Nova Gorica", "Domžale", "Kamnik", "Trbovlje", "Krško", "Postojna", "Slovenj Gradec", "Jesenice", "Škofja Loka", "Brežice", "Izola"];
 
 const statusBarva: Record<string, string> = {
   odprta: "bg-green-500/10 text-green-400 border border-green-500/20",
@@ -44,7 +46,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [obvestila, setObvestila] = useState<Obvestilo[]>([]);
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0] });
+  const [form, setForm] = useState({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "" });
   const [napaka, setNapaka] = useState("");
   const [posiljam, setPosiljam] = useState(false);
   const [ocenjevanje, setOcenjevanje] = useState<OcenjevanjeState>(null);
@@ -111,13 +113,19 @@ export default function Dashboard() {
     const res = await fetch("/api/naloge", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        naslov: form.naslov,
+        opis: form.opis,
+        cena: form.cena,
+        kategorija: form.kategorija,
+        lokacija: form.ulica ? `${form.mesto}, ${form.ulica}` : form.mesto,
+      }),
     });
     const data = await res.json();
     if (res.ok) {
       setNaloge((prev) => [data, ...prev]);
       setModal(false);
-      setForm({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0] });
+      setForm({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "" });
     } else {
       setNapaka(data.error || "Napaka");
     }
@@ -245,7 +253,10 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <p className="text-gray-500 text-sm mb-2 line-clamp-2">{n.opis}</p>
-                      <span className="text-xs text-gray-600">{n.kategorija}</span>
+                      <div className="flex gap-2 text-xs text-gray-600 flex-wrap">
+                        <span>{n.kategorija}</span>
+                        {n.lokacija && <span>· {n.lokacija}</span>}
+                      </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <span className="text-orange-500 font-bold text-lg whitespace-nowrap">{n.cena} €</span>
@@ -325,8 +336,9 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <p className="text-gray-500 text-sm mb-2 line-clamp-2">{n.opis}</p>
-                      <div className="flex gap-3 text-xs text-gray-600">
+                      <div className="flex gap-3 text-xs text-gray-600 flex-wrap">
                         <span>{n.kategorija}</span>
+                        {n.lokacija && <span>· {n.lokacija}</span>}
                         {n.narocnik && <span>· {n.narocnik.ime}</span>}
                       </div>
                     </div>
@@ -447,6 +459,19 @@ export default function Dashboard() {
               >
                 {KATEGORIJE.map((k) => <option key={k} className="bg-[#1a1a1a]">{k}</option>)}
               </select>
+              <select
+                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                value={form.mesto}
+                onChange={(e) => setForm({ ...form, mesto: e.target.value })}
+              >
+                {MESTA.map((m) => <option key={m} className="bg-[#1a1a1a]">{m}</option>)}
+              </select>
+              <input
+                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                placeholder="Ulica (neobvezno)"
+                value={form.ulica}
+                onChange={(e) => setForm({ ...form, ulica: e.target.value })}
+              />
               <div className="flex gap-3 mt-2">
                 <button
                   onClick={() => { setModal(false); setNapaka(""); }}

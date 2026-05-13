@@ -24,6 +24,7 @@ model Naloga {
   opis       String
   cena       Float
   kategorija String
+  lokacija   String
   status     String   @default("odprta")
   createdAt  DateTime @default(now())
   narocnik   User     @relation(fields: [narocnikId], references: [id])
