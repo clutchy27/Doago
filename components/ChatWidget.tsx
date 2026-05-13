@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useChatContext } from "@/context/ChatContext";
 
 type ChatTask = {
   id: string;
@@ -12,6 +13,8 @@ type ChatTask = {
   izvajalec: { ime: string } | null;
   messageCount: number;
   latestMessage: string | null;
+  latestMessageAvtorId: string | null;
+  latestMessageAvtorIme: string | null;
 };
 
 type Sporocilo = {
@@ -28,6 +31,8 @@ function formatCas(iso: string) {
 
 export default function ChatWidget() {
   const { data: session, status } = useSession();
+  const { pushNotification, openRequest, clearOpenRequest } = useChatContext();
+
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"list" | "chat">("list");
   const [tasks, setTasks] = useState<ChatTask[]>([]);
@@ -36,32 +41,97 @@ export default function ChatWidget() {
   const [novo, setNovo] = useState("");
   const [posiljam, setPosiljam] = useState(false);
   const [seenCounts, setSeenCounts] = useState<Record<string, number>>({});
-  const [initialized, setInitialized] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Refs to read latest state inside polling callbacks without stale closures
+  const openRef = useRef(open);
+  const viewRef = useRef(view);
+  const activeTaskIdRef = useRef(activeTaskId);
+  const prevCountsRef = useRef<Record<string, number>>({});
+  const initializedRef = useRef(false);
+
+  useEffect(() => { openRef.current = open; }, [open]);
+  useEffect(() => { viewRef.current = view; }, [view]);
+  useEffect(() => { activeTaskIdRef.current = activeTaskId; }, [activeTaskId]);
 
   const userId = (session?.user as any)?.id as string | undefined;
+
+  const openTask = useCallback((task: ChatTask) => {
+    setActiveTaskId(task.id);
+    setView("chat");
+    setSporocila([]);
+    setSeenCounts((prev) => ({ ...prev, [task.id]: task.messageCount }));
+  }, []);
+
+  const backToList = useCallback(() => {
+    setView("list");
+    setActiveTaskId(null);
+    setSporocila([]);
+    setNovo("");
+  }, []);
+
+  // Handle open requests from notifications
+  useEffect(() => {
+    if (!openRequest) return;
+    const task = tasks.find((t) => t.id === openRequest);
+    clearOpenRequest();
+    if (task) {
+      setOpen(true);
+      openTask(task);
+    }
+  }, [openRequest, tasks, openTask, clearOpenRequest]);
 
   const fetchTasks = useCallback(() => {
     if (status !== "authenticated") return;
     fetch("/api/chat/naloge")
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: ChatTask[]) => {
         if (!Array.isArray(data)) return;
-        setTasks(data);
-        // On first load, mark everything as seen so badge only shows new messages
-        if (!initialized) {
+
+        if (!initializedRef.current) {
+          // First load: mark everything as seen, no notifications
           const initial: Record<string, number> = {};
-          data.forEach((t: ChatTask) => { initial[t.id] = t.messageCount; });
+          data.forEach((t) => {
+            initial[t.id] = t.messageCount;
+            prevCountsRef.current[t.id] = t.messageCount;
+          });
           setSeenCounts(initial);
-          setInitialized(true);
+          initializedRef.current = true;
+        } else {
+          // Subsequent polls: detect new messages from others
+          data.forEach((t) => {
+            const prev = prevCountsRef.current[t.id] ?? 0;
+            if (
+              t.messageCount > prev &&
+              t.latestMessageAvtorId &&
+              t.latestMessageAvtorId !== userId &&
+              t.latestMessage
+            ) {
+              const notViewing =
+                !openRef.current ||
+                viewRef.current !== "chat" ||
+                activeTaskIdRef.current !== t.id;
+              if (notViewing) {
+                pushNotification({
+                  taskId: t.id,
+                  taskNaslov: t.naslov,
+                  senderName: t.latestMessageAvtorIme ?? "Neznani pošiljatelj",
+                  message: t.latestMessage,
+                });
+              }
+            }
+            prevCountsRef.current[t.id] = t.messageCount;
+          });
         }
+
+        setTasks(data);
       });
-  }, [status, initialized]);
+  }, [status, userId, pushNotification]);
 
   useEffect(() => {
     fetchTasks();
-    const interval = setInterval(fetchTasks, 15000);
+    const interval = setInterval(fetchTasks, 10000);
     return () => clearInterval(interval);
   }, [fetchTasks]);
 
@@ -69,9 +139,7 @@ export default function ChatWidget() {
     if (!activeTaskId) return;
     fetch(`/api/chat/naloge/${activeTaskId}`)
       .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setSporocila(data);
-      });
+      .then((data) => { if (Array.isArray(data)) setSporocila(data); });
   }, [activeTaskId]);
 
   useEffect(() => {
@@ -89,20 +157,6 @@ export default function ChatWidget() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [sporocila]);
 
-  const openTask = (task: ChatTask) => {
-    setActiveTaskId(task.id);
-    setView("chat");
-    setSporocila([]);
-    setSeenCounts((prev) => ({ ...prev, [task.id]: task.messageCount }));
-  };
-
-  const backToList = () => {
-    setView("list");
-    setActiveTaskId(null);
-    setSporocila([]);
-    setNovo("");
-  };
-
   const posli = async () => {
     if (!novo.trim() || posiljam || !activeTaskId) return;
     setPosiljam(true);
@@ -115,8 +169,14 @@ export default function ChatWidget() {
       const s = await res.json();
       setSporocila((prev) => [...prev, s]);
       setNovo("");
+      const newCount = (prevCountsRef.current[activeTaskId] ?? 0) + 1;
+      prevCountsRef.current[activeTaskId] = newCount;
       setTasks((prev) =>
-        prev.map((t) => t.id === activeTaskId ? { ...t, messageCount: t.messageCount + 1, latestMessage: s.besedilo } : t)
+        prev.map((t) =>
+          t.id === activeTaskId
+            ? { ...t, messageCount: t.messageCount + 1, latestMessage: s.besedilo, latestMessageAvtorId: userId ?? null }
+            : t
+        )
       );
       setSeenCounts((prev) => ({ ...prev, [activeTaskId]: (prev[activeTaskId] ?? 0) + 1 }));
     }
@@ -125,7 +185,10 @@ export default function ChatWidget() {
 
   if (status !== "authenticated" || tasks.length === 0) return null;
 
-  const totalUnread = tasks.reduce((sum, t) => sum + Math.max(0, t.messageCount - (seenCounts[t.id] ?? 0)), 0);
+  const totalUnread = tasks.reduce(
+    (sum, t) => sum + Math.max(0, t.messageCount - (seenCounts[t.id] ?? 0)),
+    0
+  );
   const activeTask = tasks.find((t) => t.id === activeTaskId);
 
   return (

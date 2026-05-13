@@ -16,7 +16,14 @@ export async function GET(req: NextRequest) {
               COUNT(s.id)::int AS "messageCount",
               (SELECT s2.besedilo FROM "Sporocilo" s2
                WHERE s2."nalogaId" = n.id
-               ORDER BY s2."createdAt" DESC LIMIT 1) AS "latestMessage"
+               ORDER BY s2."createdAt" DESC LIMIT 1) AS "latestMessage",
+              (SELECT s2."avtorId" FROM "Sporocilo" s2
+               WHERE s2."nalogaId" = n.id
+               ORDER BY s2."createdAt" DESC LIMIT 1) AS "latestMessageAvtorId",
+              (SELECT u2.ime FROM "Sporocilo" s2
+               JOIN "User" u2 ON u2.id = s2."avtorId"
+               WHERE s2."nalogaId" = n.id
+               ORDER BY s2."createdAt" DESC LIMIT 1) AS "latestMessageAvtorIme"
        FROM "Naloga" n
        JOIN "User" u_n ON u_n.id = n."narocnikId"
        LEFT JOIN "User" u_i ON u_i.id = n."izvajalecId"
