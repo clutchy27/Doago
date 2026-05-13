@@ -1,7 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useChatContext } from "@/context/ChatContext";
 
 type ChatTask = {
   id: string;
@@ -13,8 +12,6 @@ type ChatTask = {
   izvajalec: { ime: string } | null;
   messageCount: number;
   latestMessage: string | null;
-  latestMessageAvtorId: string | null;
-  latestMessageAvtorIme: string | null;
 };
 
 type Sporocilo = {
@@ -31,8 +28,6 @@ function formatCas(iso: string) {
 
 export default function ChatWidget() {
   const { data: session, status } = useSession();
-  const { pushNotification, openRequest, clearOpenRequest } = useChatContext();
-
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"list" | "chat">("list");
   const [tasks, setTasks] = useState<ChatTask[]>([]);
@@ -41,46 +36,11 @@ export default function ChatWidget() {
   const [novo, setNovo] = useState("");
   const [posiljam, setPosiljam] = useState(false);
   const [seenCounts, setSeenCounts] = useState<Record<string, number>>({});
-
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  // Refs to read latest state inside polling callbacks without stale closures
-  const openRef = useRef(open);
-  const viewRef = useRef(view);
-  const activeTaskIdRef = useRef(activeTaskId);
-  const prevCountsRef = useRef<Record<string, number>>({});
   const initializedRef = useRef(false);
 
-  useEffect(() => { openRef.current = open; }, [open]);
-  useEffect(() => { viewRef.current = view; }, [view]);
-  useEffect(() => { activeTaskIdRef.current = activeTaskId; }, [activeTaskId]);
-
   const userId = (session?.user as any)?.id as string | undefined;
-
-  const openTask = useCallback((task: ChatTask) => {
-    setActiveTaskId(task.id);
-    setView("chat");
-    setSporocila([]);
-    setSeenCounts((prev) => ({ ...prev, [task.id]: task.messageCount }));
-  }, []);
-
-  const backToList = useCallback(() => {
-    setView("list");
-    setActiveTaskId(null);
-    setSporocila([]);
-    setNovo("");
-  }, []);
-
-  // Handle open requests from notifications
-  useEffect(() => {
-    if (!openRequest) return;
-    const task = tasks.find((t) => t.id === openRequest);
-    clearOpenRequest();
-    if (task) {
-      setOpen(true);
-      openTask(task);
-    }
-  }, [openRequest, tasks, openTask, clearOpenRequest]);
 
   const fetchTasks = useCallback(() => {
     if (status !== "authenticated") return;
@@ -88,46 +48,15 @@ export default function ChatWidget() {
       .then((r) => r.json())
       .then((data: ChatTask[]) => {
         if (!Array.isArray(data)) return;
-
         if (!initializedRef.current) {
-          // First load: mark everything as seen, no notifications
           const initial: Record<string, number> = {};
-          data.forEach((t) => {
-            initial[t.id] = t.messageCount;
-            prevCountsRef.current[t.id] = t.messageCount;
-          });
+          data.forEach((t) => { initial[t.id] = t.messageCount; });
           setSeenCounts(initial);
           initializedRef.current = true;
-        } else {
-          // Subsequent polls: detect new messages from others
-          data.forEach((t) => {
-            const prev = prevCountsRef.current[t.id] ?? 0;
-            if (
-              t.messageCount > prev &&
-              t.latestMessageAvtorId &&
-              t.latestMessageAvtorId !== userId &&
-              t.latestMessage
-            ) {
-              const notViewing =
-                !openRef.current ||
-                viewRef.current !== "chat" ||
-                activeTaskIdRef.current !== t.id;
-              if (notViewing) {
-                pushNotification({
-                  taskId: t.id,
-                  taskNaslov: t.naslov,
-                  senderName: t.latestMessageAvtorIme ?? "Neznani pošiljatelj",
-                  message: t.latestMessage,
-                });
-              }
-            }
-            prevCountsRef.current[t.id] = t.messageCount;
-          });
         }
-
         setTasks(data);
       });
-  }, [status, userId, pushNotification]);
+  }, [status]);
 
   useEffect(() => {
     fetchTasks();
@@ -157,6 +86,20 @@ export default function ChatWidget() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [sporocila]);
 
+  const openTask = (task: ChatTask) => {
+    setActiveTaskId(task.id);
+    setView("chat");
+    setSporocila([]);
+    setSeenCounts((prev) => ({ ...prev, [task.id]: task.messageCount }));
+  };
+
+  const backToList = () => {
+    setView("list");
+    setActiveTaskId(null);
+    setSporocila([]);
+    setNovo("");
+  };
+
   const posli = async () => {
     if (!novo.trim() || posiljam || !activeTaskId) return;
     setPosiljam(true);
@@ -169,12 +112,10 @@ export default function ChatWidget() {
       const s = await res.json();
       setSporocila((prev) => [...prev, s]);
       setNovo("");
-      const newCount = (prevCountsRef.current[activeTaskId] ?? 0) + 1;
-      prevCountsRef.current[activeTaskId] = newCount;
       setTasks((prev) =>
         prev.map((t) =>
           t.id === activeTaskId
-            ? { ...t, messageCount: t.messageCount + 1, latestMessage: s.besedilo, latestMessageAvtorId: userId ?? null }
+            ? { ...t, messageCount: t.messageCount + 1, latestMessage: s.besedilo }
             : t
         )
       );
@@ -195,7 +136,6 @@ export default function ChatWidget() {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
       {open && (
         <div className="w-96 h-[500px] bg-[#111111] border border-white/10 rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden">
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 shrink-0">
             {view === "chat" && activeTask ? (
               <>
@@ -226,7 +166,6 @@ export default function ChatWidget() {
             )}
           </div>
 
-          {/* Task list */}
           {view === "list" && (
             <div className="flex-1 overflow-y-auto">
               {tasks.map((t) => {
@@ -259,7 +198,6 @@ export default function ChatWidget() {
             </div>
           )}
 
-          {/* Chat */}
           {view === "chat" && (
             <>
               <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2">
@@ -311,7 +249,6 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Floating button */}
       <button
         onClick={() => setOpen((prev) => !prev)}
         className="w-14 h-14 bg-orange-500 hover:bg-orange-600 rounded-full shadow-lg shadow-orange-500/30 flex items-center justify-center transition-all duration-150 hover:scale-105 active:scale-95 relative"
