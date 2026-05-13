@@ -16,7 +16,7 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
 
         {/* Logo */}
         <Link
-          href="/naloge"
+          href="/"
           className="text-xl font-bold shrink-0 transition-opacity hover:opacity-80"
           style={{ color: "var(--accent)" }}
         >

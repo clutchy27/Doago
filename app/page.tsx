@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { Nav } from "@/components/Nav";
 
 const STATS = [
   { value: "100+", label: "Objavljenih nalog" },
@@ -37,38 +38,31 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0a] text-white">
 
       {/* Nav */}
-      <nav className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-orange-500 hover:text-orange-400 transition-colors duration-150">
-            Doago
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {loggedIn ? (
+      {loggedIn ? (
+        <Nav />
+      ) : (
+        <nav className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
+            <Link href="/" className="text-xl font-bold text-orange-500 hover:text-orange-400 transition-colors duration-150">
+              Doago
+            </Link>
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
-                href="/naloge"
+                href="/prijava"
+                className="text-sm text-gray-400 hover:text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-white/5 transition-all duration-150"
+              >
+                Prijava
+              </Link>
+              <Link
+                href="/register"
                 className="text-sm bg-orange-500 text-white px-4 sm:px-5 py-2 rounded-xl font-medium hover:bg-orange-600 transition-all duration-150 hover:shadow-lg hover:shadow-orange-500/20"
               >
-                Moje naloge
+                Začni brezplačno
               </Link>
-            ) : (
-              <>
-                <Link
-                  href="/prijava"
-                  className="text-sm text-gray-400 hover:text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-white/5 transition-all duration-150"
-                >
-                  Prijava
-                </Link>
-                <Link
-                  href="/register"
-                  className="text-sm bg-orange-500 text-white px-4 sm:px-5 py-2 rounded-xl font-medium hover:bg-orange-600 transition-all duration-150 hover:shadow-lg hover:shadow-orange-500/20"
-                >
-                  Začni brezplačno
-                </Link>
-              </>
-            )}
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       {/* Hero */}
       <section className="relative overflow-hidden">
