@@ -1,8 +1,6 @@
 "use client";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 const STATS = [
   { value: "100+", label: "Objavljenih nalog" },
@@ -33,12 +31,6 @@ const KATEGORIJE = ["Hišna opravila", "Prevoz", "IT pomoč", "Pouk", "Vrtnarjen
 
 export default function Home() {
   const { status } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === "authenticated") router.replace("/naloge");
-  }, [status, router]);
-
   const loggedIn = status === "authenticated";
 
   return (
