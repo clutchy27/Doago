@@ -25,8 +25,24 @@ export async function GET(req: NextRequest) {
 
     const userId = (token.sub ?? token.id) as string;
     const pogled = req.nextUrl.searchParams.get("pogled") ?? "narocnik";
+    const tab = req.nextUrl.searchParams.get("tab"); // "sprejete" | "opravljene" | null
 
     if (pogled === "narocnik") {
+      if (tab === "sprejete") {
+        const { rows } = await pool.query(
+          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status IN ('sprejeta', 'v teku', 'plačano') ORDER BY "createdAt" DESC`,
+          [userId]
+        );
+        return NextResponse.json(rows);
+      }
+      if (tab === "opravljene") {
+        const { rows } = await pool.query(
+          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status = 'zaprta' ORDER BY "createdAt" DESC`,
+          [userId]
+        );
+        return NextResponse.json(rows);
+      }
+      // All narocnik tasks (backward compat)
       const { rows } = await pool.query(
         `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 ORDER BY "createdAt" DESC`,
         [userId]
@@ -34,17 +50,45 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(rows);
     }
 
-    // izvajalec pogled: odprte naloge, ki jih ta uporabnik ni objavil
-    const { rows } = await pool.query(
-      `SELECT n.*, u.ime AS "narocnikIme"
-       FROM "Naloga" n
-       JOIN "User" u ON u.id = n."narocnikId"
-       WHERE n.status = 'odprta' AND n."narocnikId" != $1
-       ORDER BY n."createdAt" DESC`,
-      [userId]
-    );
-    const naloge = rows.map(({ narocnikIme, ...n }) => ({ ...n, narocnik: { ime: narocnikIme } }));
-    return NextResponse.json(naloge);
+    if (pogled === "izvajalec") {
+      if (tab === "sprejete") {
+        const { rows } = await pool.query(
+          `SELECT n.*, u.ime AS "narocnikIme"
+           FROM "Naloga" n
+           JOIN "User" u ON u.id = n."narocnikId"
+           WHERE n."izvajalecId" = $1 AND n.status IN ('sprejeta', 'v teku', 'plačano')
+           ORDER BY n."createdAt" DESC`,
+          [userId]
+        );
+        const naloge = rows.map(({ narocnikIme, ...n }) => ({ ...n, narocnik: { ime: narocnikIme } }));
+        return NextResponse.json(naloge);
+      }
+      if (tab === "opravljene") {
+        const { rows } = await pool.query(
+          `SELECT n.*, u.ime AS "narocnikIme"
+           FROM "Naloga" n
+           JOIN "User" u ON u.id = n."narocnikId"
+           WHERE n."izvajalecId" = $1 AND n.status = 'zaprta'
+           ORDER BY n."createdAt" DESC`,
+          [userId]
+        );
+        const naloge = rows.map(({ narocnikIme, ...n }) => ({ ...n, narocnik: { ime: narocnikIme } }));
+        return NextResponse.json(naloge);
+      }
+      // All open tasks not created by user (used by /naloge/vse and backward compat)
+      const { rows } = await pool.query(
+        `SELECT n.*, u.ime AS "narocnikIme"
+         FROM "Naloga" n
+         JOIN "User" u ON u.id = n."narocnikId"
+         WHERE n.status = 'odprta' AND n."narocnikId" != $1
+         ORDER BY n."createdAt" DESC`,
+        [userId]
+      );
+      const naloge = rows.map(({ narocnikIme, ...n }) => ({ ...n, narocnik: { ime: narocnikIme } }));
+      return NextResponse.json(naloge);
+    }
+
+    return NextResponse.json({ error: "Neznan pogled" }, { status: 400 });
   } catch (err) {
     console.error("[GET /api/naloge]", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });

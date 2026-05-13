@@ -110,7 +110,7 @@ export default function ProfilPage() {
       <main className="max-w-2xl mx-auto px-4 sm:px-8 py-10">
         <div className="flex items-center gap-3 mb-8">
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/naloge")}
             className="text-sm text-gray-600 hover:text-gray-300 transition-colors duration-150 flex items-center gap-1.5"
           >
             ← Nazaj

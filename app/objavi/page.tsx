@@ -68,7 +68,7 @@ export default function ObrazemObjave() {
       body: JSON.stringify(form),
     });
     if (res.ok) {
-      router.push("/dashboard");
+      router.push("/naloge");
     } else {
       const data = await res.json();
       setNapaka(data.error || "Napaka pri objavi");
@@ -93,7 +93,7 @@ export default function ObrazemObjave() {
       <main className="max-w-lg mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center gap-3 mb-8">
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/naloge")}
             className="text-sm text-gray-600 hover:text-gray-300 transition-colors duration-150 flex items-center gap-1.5"
           >
             ← Nazaj
@@ -154,7 +154,7 @@ export default function ObrazemObjave() {
 
           <div className="flex gap-3 mt-2">
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/naloge")}
               className="flex-1 border border-white/10 text-gray-400 py-3 rounded-xl font-medium hover:bg-white/5 transition-all duration-150 text-sm"
             >
               Prekliči

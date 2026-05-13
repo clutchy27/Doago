@@ -1,102 +1,113 @@
 "use client";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
+import { useMode } from "@/context/ModeContext";
 
-export type NavPage = "dashboard" | "naloge" | "profil" | "objavi";
-
-export function Nav({ current, badge }: { current?: NavPage; badge?: number }) {
+export function Nav({ badge, current }: { badge?: number; current?: string }) {
   const [open, setOpen] = useState(false);
-
-  const item = (href: string, label: string, page?: NavPage) => (
-    <Link
-      href={href}
-      onClick={() => setOpen(false)}
-      className={`text-sm px-4 py-2 rounded-xl transition-all duration-150 ${
-        current === page
-          ? "text-white bg-white/10 font-medium"
-          : "text-gray-400 hover:text-white hover:bg-white/5"
-      }`}
-    >
-      {label}
-    </Link>
-  );
+  const { mode, setMode } = useMode();
+  const { data: session } = useSession();
+  const userName = (session?.user as { name?: string } | undefined)?.name;
 
   return (
     <nav className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between gap-3">
+
+        {/* Logo */}
         <Link
-          href="/"
-          className="text-xl font-bold text-orange-500 hover:text-orange-400 transition-colors duration-150 shrink-0"
+          href="/naloge"
+          className="text-xl font-bold shrink-0 transition-opacity hover:opacity-80"
+          style={{ color: "var(--accent)" }}
         >
           Doago
         </Link>
 
-        {/* Desktop */}
-        <div className="hidden sm:flex items-center gap-0.5">
-          {item("/dashboard", "Dashboard", "dashboard")}
-          {item("/naloge", "Vse naloge", "naloge")}
-          <div className="relative">
-            {item("/profil", "Moj profil", "profil")}
-            {!!badge && badge > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-orange-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center pointer-events-none">
-                {badge}
+        {/* Mode toggle — center */}
+        <div className="flex bg-[#111111] border border-white/8 rounded-xl p-1 gap-1">
+          <button
+            onClick={() => setMode("narocnik")}
+            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+              mode === "narocnik"
+                ? "bg-[#F97316] text-white shadow-md shadow-orange-500/25"
+                : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            Naročnik
+          </button>
+          <button
+            onClick={() => setMode("izvajalec")}
+            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+              mode === "izvajalec"
+                ? "bg-[#22C55E] text-white shadow-md shadow-green-500/25"
+                : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            Izvajalec
+          </button>
+        </div>
+
+        {/* Right: profile + logout (desktop) */}
+        <div className="hidden sm:flex items-center gap-1 shrink-0">
+          {userName && (
+            <Link
+              href="/profil"
+              className="relative flex items-center gap-2 text-sm text-gray-400 hover:text-white px-3 py-2 rounded-xl hover:bg-white/5 transition-all"
+            >
+              <span className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
+                {userName[0].toUpperCase()}
               </span>
-            )}
-          </div>
-          <div className="w-px h-4 bg-white/10 mx-2" />
+              <span>{userName}</span>
+              {!!badge && badge > 0 && (
+                <span
+                  className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                  style={{ background: "var(--accent)" }}
+                >
+                  {badge}
+                </span>
+              )}
+            </Link>
+          )}
+          <div className="w-px h-4 bg-white/10 mx-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/prijava" })}
-            className="text-sm text-gray-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl transition-all duration-150"
+            className="text-sm text-gray-500 hover:text-white px-3 py-2 rounded-xl hover:bg-white/5 transition-all"
           >
             Odjava
           </button>
         </div>
 
-        {/* Mobile */}
-        <div className="flex sm:hidden items-center gap-3">
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="sm:hidden relative p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors shrink-0"
+          aria-label="Meni"
+        >
           {!!badge && badge > 0 && (
-            <span className="bg-orange-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-              {badge}
-            </span>
+            <span
+              className="absolute top-1 right-1 w-2 h-2 rounded-full"
+              style={{ background: "var(--accent)" }}
+            />
           )}
-          <button
-            onClick={() => setOpen(!open)}
-            className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
-            aria-label="Meni"
-          >
-            {open ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
-        </div>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {open
+              ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            }
+          </svg>
+        </button>
       </div>
 
       {/* Mobile dropdown */}
       {open && (
         <div className="sm:hidden border-t border-white/5 bg-[#0d0d0d] px-4 py-3 flex flex-col gap-1">
-          {(["dashboard", "naloge", "profil"] as const).map((page) => {
-            const labels: Record<string, string> = { dashboard: "Dashboard", naloge: "Vse naloge", profil: "Moj profil" };
-            const hrefs: Record<string, string> = { dashboard: "/dashboard", naloge: "/naloge", profil: "/profil" };
-            return (
-              <Link
-                key={page}
-                href={hrefs[page]}
-                onClick={() => setOpen(false)}
-                className={`text-sm px-4 py-3 rounded-xl transition-all ${
-                  current === page ? "text-white bg-white/10 font-medium" : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {labels[page]}
-              </Link>
-            );
-          })}
+          <Link
+            href="/profil"
+            onClick={() => setOpen(false)}
+            className="text-sm px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            Moj profil{userName ? ` (${userName})` : ""}
+          </Link>
           <div className="h-px bg-white/5 my-1" />
           <button
             onClick={() => { setOpen(false); signOut({ callbackUrl: "/prijava" }); }}
