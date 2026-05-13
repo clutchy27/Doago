@@ -39,8 +39,7 @@ export default function Home() {
     if (status === "authenticated") router.replace("/naloge");
   }, [status, router]);
 
-  if (status === "loading") return <div className="min-h-screen bg-[#0a0a0a]" />;
-  if (status === "authenticated") return null;
+  const loggedIn = status === "authenticated";
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -52,18 +51,29 @@ export default function Home() {
             Doago
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/prijava"
-              className="text-sm text-gray-400 hover:text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-white/5 transition-all duration-150"
-            >
-              Prijava
-            </Link>
-            <Link
-              href="/register"
-              className="text-sm bg-orange-500 text-white px-4 sm:px-5 py-2 rounded-xl font-medium hover:bg-orange-600 transition-all duration-150 hover:shadow-lg hover:shadow-orange-500/20"
-            >
-              Začni brezplačno
-            </Link>
+            {loggedIn ? (
+              <Link
+                href="/naloge"
+                className="text-sm bg-orange-500 text-white px-4 sm:px-5 py-2 rounded-xl font-medium hover:bg-orange-600 transition-all duration-150 hover:shadow-lg hover:shadow-orange-500/20"
+              >
+                Moje naloge
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/prijava"
+                  className="text-sm text-gray-400 hover:text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-white/5 transition-all duration-150"
+                >
+                  Prijava
+                </Link>
+                <Link
+                  href="/register"
+                  className="text-sm bg-orange-500 text-white px-4 sm:px-5 py-2 rounded-xl font-medium hover:bg-orange-600 transition-all duration-150 hover:shadow-lg hover:shadow-orange-500/20"
+                >
+                  Začni brezplačno
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -85,13 +95,13 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
-              href="/register"
+              href={loggedIn ? "/naloge" : "/register"}
               className="bg-orange-500 text-white px-8 py-3.5 rounded-xl text-sm font-semibold hover:bg-orange-600 transition-all duration-150 hover:shadow-xl hover:shadow-orange-500/25 hover:-translate-y-0.5 inline-block"
             >
-              Objavi nalogo
+              {loggedIn ? "Moje naloge" : "Objavi nalogo"}
             </Link>
             <Link
-              href="/register"
+              href={loggedIn ? "/naloge/vse" : "/register"}
               className="border border-white/10 text-gray-300 px-8 py-3.5 rounded-xl text-sm hover:bg-white/5 hover:border-white/20 transition-all duration-150 hover:-translate-y-0.5 inline-block"
             >
               Postani izvajalec →
@@ -142,7 +152,7 @@ export default function Home() {
             {KATEGORIJE.map((k) => (
               <Link
                 key={k}
-                href="/register"
+                href={loggedIn ? "/naloge/vse" : "/register"}
                 className="text-sm bg-white/5 text-gray-400 border border-white/8 px-4 py-2 rounded-full hover:bg-orange-500/10 hover:text-orange-400 hover:border-orange-500/20 transition-all duration-150"
               >
                 {k}
@@ -159,10 +169,10 @@ export default function Home() {
           Registracija je brezplačna in traja manj kot minuto. Objavi svojo prvo nalogo še danes.
         </p>
         <Link
-          href="/register"
+          href={loggedIn ? "/naloge" : "/register"}
           className="inline-block bg-orange-500 text-white px-10 py-4 rounded-xl text-sm font-semibold hover:bg-orange-600 transition-all duration-150 hover:shadow-2xl hover:shadow-orange-500/30 hover:-translate-y-0.5"
         >
-          Začni danes →
+          {loggedIn ? "Moje naloge →" : "Začni danes →"}
         </Link>
       </section>
 
