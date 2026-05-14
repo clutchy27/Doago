@@ -56,7 +56,7 @@ export default function Home() {
       ) : (
         <nav className="sticky top-0 z-40 bg-[#0F0F0F]/80 backdrop-blur-xl border-b border-white/8">
           <div className="max-w-5xl mx-auto px-4 sm:px-8 py-5 grid grid-cols-3 items-center">
-            <Link href="/" className="text-xl font-extrabold tracking-tight hover:opacity-80 transition-opacity duration-150" style={{ color: accent }}>
+            <Link href="/" className="text-xl font-extrabold tracking-tight text-[#F97316] hover:opacity-80 transition-opacity duration-150">
               Doago
             </Link>
             <div className="flex items-center justify-center gap-2 sm:gap-3">
@@ -382,7 +382,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="text-center sm:text-left">
-              <span className="text-lg font-extrabold tracking-tight transition-colors duration-700" style={{ color: accent }}>Doago</span>
+              <span className="text-lg font-extrabold tracking-tight text-[#F97316]">Doago</span>
               <p className="text-xs text-white/20 mt-1">Slovenska platforma za storitve · 2025</p>
             </div>
             <div className="flex flex-wrap gap-4 sm:gap-6 text-xs text-white/25 justify-center">
