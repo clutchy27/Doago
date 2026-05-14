@@ -42,24 +42,25 @@ export default function Home() {
         <Nav />
       ) : (
         <nav className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 grid grid-cols-3 items-center">
             <Link href="/" className="text-xl font-bold text-orange-500 hover:text-orange-400 transition-colors duration-150">
               Doago
             </Link>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
               <Link
-                href="/prijava"
+                href="/login"
                 className="text-sm text-gray-400 hover:text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-white/5 transition-all duration-150"
               >
-                Prijava
+                Prijavi se
               </Link>
               <Link
                 href="/register"
                 className="text-sm bg-orange-500 text-white px-4 sm:px-5 py-2 rounded-xl font-medium hover:bg-orange-600 transition-all duration-150 hover:shadow-lg hover:shadow-orange-500/20"
               >
-                Začni brezplačno
+                Registriraj se
               </Link>
             </div>
+            <div />
           </div>
         </nav>
       )}
