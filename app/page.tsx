@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Nav } from "@/components/Nav";
+import { useMode } from "@/context/ModeContext";
 
 const STATS = [
   { value: "100+", label: "Objavljenih nalog" },
@@ -35,7 +36,16 @@ const KATEGORIJE = ["Hišna opravila", "Prevoz", "IT pomoč", "Pouk", "Vrtnarjen
 
 export default function Home() {
   const { status } = useSession();
+  const { mode } = useMode();
   const loggedIn = status === "authenticated";
+  const isIzvajalec = mode === "izvajalec";
+
+  // Accent palette — switches with mode
+  const accent      = isIzvajalec ? "#22C55E" : "#F97316";
+  const accentDark  = isIzvajalec ? "#16a34a" : "#ea580c";
+  const accentLight = isIzvajalec ? "#4ade80" : "#fdba74";
+  const heroWarmBg  = isIzvajalec ? "#001a04" : "#1a0800";
+  const ctaWarmBg   = isIzvajalec ? "#001a04" : "#1a0800";
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white overflow-x-hidden">
@@ -46,7 +56,7 @@ export default function Home() {
       ) : (
         <nav className="sticky top-0 z-40 bg-[#0F0F0F]/80 backdrop-blur-xl border-b border-white/8">
           <div className="max-w-5xl mx-auto px-4 sm:px-8 py-5 grid grid-cols-3 items-center">
-            <Link href="/" className="text-xl font-extrabold tracking-tight text-[#F97316] hover:text-orange-400 transition-colors duration-150">
+            <Link href="/" className="text-xl font-extrabold tracking-tight hover:opacity-80 transition-opacity duration-150" style={{ color: accent }}>
               Doago
             </Link>
             <div className="flex items-center justify-center gap-2 sm:gap-3">
@@ -58,7 +68,11 @@ export default function Home() {
               </Link>
               <Link
                 href="/register"
-                className="text-sm bg-gradient-to-r from-[#F97316] to-[#ea580c] text-white px-5 py-2 rounded-xl font-semibold transition-all duration-150 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-px"
+                className="text-sm text-white px-5 py-2 rounded-xl font-semibold transition-all duration-200 hover:-translate-y-px"
+                style={{
+                  background: `linear-gradient(135deg, ${accent} 0%, ${accentDark} 100%)`,
+                  boxShadow: `0 4px 14px ${accent}40`,
+                }}
               >
                 Registriraj se
               </Link>
@@ -70,10 +84,15 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        {/* Warm background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0F0F0F] via-[#1a0800] to-[#0F0F0F] pointer-events-none" />
+        {/* Warm background gradient — color follows mode */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(to bottom, #0F0F0F, ${heroWarmBg}, #0F0F0F)`,
+          }}
+        />
 
-        {/* Dot grid pattern */}
+        {/* Dot grid */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -82,20 +101,26 @@ export default function Home() {
           }}
         />
 
-        {/* Large orange glow orb */}
-        <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/4 w-[700px] h-[700px] bg-orange-500/20 rounded-full blur-3xl pointer-events-none" />
+        {/* Large glow orb — color follows mode */}
+        <div
+          className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/4 w-[700px] h-[700px] rounded-full blur-3xl pointer-events-none transition-colors duration-700"
+          style={{ background: `${accent}33` }}
+        />
 
-        {/* Secondary green accent orb */}
-        <div className="absolute right-0 bottom-0 w-[400px] h-[400px] bg-green-500/5 rounded-full blur-3xl pointer-events-none" />
+        {/* Secondary dim orb opposite side */}
+        <div className="absolute right-0 bottom-0 w-[400px] h-[400px] bg-white/[0.02] rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-8 pt-28 sm:pt-40 pb-24 sm:pb-36 text-center relative">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 text-orange-400 text-xs font-semibold px-4 py-2 rounded-full mb-10 tracking-wide shadow-lg shadow-orange-500/10">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#F97316] animate-pulse" />
+          <div
+            className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 text-xs font-semibold px-4 py-2 rounded-full mb-10 tracking-wide shadow-lg transition-colors duration-500"
+            style={{ color: accent }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: accent }} />
             🇸🇮 Slovenska platforma za storitve
           </div>
 
-          {/* Heading with gradient */}
+          {/* Heading */}
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-extrabold leading-[1.05] tracking-tight mb-8">
             <span
               className="block"
@@ -109,8 +134,9 @@ export default function Home() {
               Potrebuješ pomoč?
             </span>
             <span
+              className="transition-all duration-700"
               style={{
-                backgroundImage: "linear-gradient(135deg, #F97316 0%, #fb923c 50%, #fdba74 100%)",
+                backgroundImage: `linear-gradient(135deg, ${accent} 0%, ${accentLight} 100%)`,
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -131,8 +157,8 @@ export default function Home() {
               href={loggedIn ? "/naloge" : "/register"}
               className="relative inline-flex items-center gap-2 text-sm font-bold text-white px-8 py-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 group"
               style={{
-                background: "linear-gradient(135deg, #F97316 0%, #ea580c 100%)",
-                boxShadow: "0 0 30px rgba(249,115,22,0.35), 0 4px 20px rgba(249,115,22,0.2)",
+                background: `linear-gradient(135deg, ${accent} 0%, ${accentDark} 100%)`,
+                boxShadow: `0 0 30px ${accent}59, 0 4px 20px ${accent}33`,
               }}
             >
               <span>{loggedIn ? "Moje naloge" : "Objavi nalogo brezplačno"}</span>
@@ -151,7 +177,6 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Social proof */}
           <p className="mt-10 text-xs text-white/25 tracking-wide">
             Brezplačno · Brez kreditne kartice · Takoj aktivno
           </p>
@@ -167,15 +192,24 @@ export default function Home() {
               key={s.label}
               className="relative bg-white/5 backdrop-blur-sm border border-white/8 rounded-2xl p-6 text-center overflow-hidden group hover:bg-white/8 hover:border-white/15 transition-all duration-300"
             >
-              {/* Top accent gradient line */}
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#F97316]/60 to-transparent" />
-              {/* Subtle glow on hover */}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#F97316]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl" />
-
-              <p
-                className="text-3xl sm:text-4xl font-extrabold mb-1.5 tracking-tight relative"
+              {/* Top accent line — follows mode */}
+              <div
+                className="absolute top-0 left-0 right-0 h-px transition-colors duration-700"
                 style={{
-                  backgroundImage: "linear-gradient(135deg, #F97316 0%, #fb923c 60%, #fcd34d 100%)",
+                  background: `linear-gradient(to right, transparent, ${accent}99, transparent)`,
+                }}
+              />
+              {/* Hover glow */}
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl"
+                style={{ background: `linear-gradient(to bottom, ${accent}0d, transparent)` }}
+              />
+
+              {/* Number gradient — follows mode */}
+              <p
+                className="text-3xl sm:text-4xl font-extrabold mb-1.5 tracking-tight relative transition-all duration-700"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${accent} 0%, ${accentLight} 100%)`,
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
@@ -192,7 +226,12 @@ export default function Home() {
       {/* Kako deluje */}
       <section className="max-w-5xl mx-auto px-4 sm:px-8 py-28 sm:py-36">
         <div className="text-center mb-20">
-          <p className="text-xs text-[#F97316] font-bold uppercase tracking-[0.2em] mb-5">Kako deluje</p>
+          <p
+            className="text-xs font-bold uppercase tracking-[0.2em] mb-5 transition-colors duration-700"
+            style={{ color: accent }}
+          >
+            Kako deluje
+          </p>
           <h2
             className="text-3xl sm:text-5xl font-extrabold tracking-tight"
             style={{
@@ -206,25 +245,35 @@ export default function Home() {
           </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {KORAKI.map((k, i) => (
+          {KORAKI.map((k) => (
             <div
               key={k.st}
-              className="relative bg-white/[0.03] border border-white/8 p-8 rounded-2xl hover:-translate-y-1.5 hover:border-[#F97316]/30 transition-all duration-300 group overflow-hidden cursor-default"
-              style={{
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
-              }}
+              className="relative bg-white/[0.03] border border-white/8 p-8 rounded-2xl hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden cursor-default"
+              style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)" }}
             >
-              {/* Top accent line */}
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#F97316]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              {/* Hover glow */}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#F97316]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl" />
+              {/* Top accent line on hover */}
+              <div
+                className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: `linear-gradient(to right, transparent, ${accent}66, transparent)` }}
+              />
+              {/* Hover glow overlay */}
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl"
+                style={{ background: `linear-gradient(to bottom, ${accent}0d, transparent)` }}
+              />
 
-              {/* Icon with glowing background */}
+              {/* Icon box */}
               <div className="relative mb-6">
-                <div className="w-12 h-12 rounded-xl bg-[#F97316]/10 border border-[#F97316]/20 flex items-center justify-center text-xl group-hover:bg-[#F97316]/15 group-hover:shadow-lg group-hover:shadow-orange-500/20 transition-all duration-300">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all duration-300"
+                  style={{
+                    background: `${accent}1a`,
+                    border: `1px solid ${accent}33`,
+                  }}
+                >
                   {k.icon}
                 </div>
-                <span className="absolute -top-1 -right-1 text-[#2A2A2A] text-5xl font-black select-none leading-none group-hover:text-[#F97316]/10 transition-colors duration-300">{k.st}</span>
+                <span className="absolute -top-1 -right-1 text-[#2A2A2A] text-5xl font-black select-none leading-none group-hover:opacity-50 transition-opacity duration-300">{k.st}</span>
               </div>
 
               <h3 className="text-base font-bold text-white mb-3 relative">{k.naslov}</h3>
@@ -251,7 +300,22 @@ export default function Home() {
               <Link
                 key={k}
                 href={loggedIn ? "/naloge/vse" : "/register"}
-                className="text-sm bg-white/5 text-white/60 border border-white/8 px-5 py-2.5 rounded-full hover:bg-[#F97316]/10 hover:text-orange-400 hover:border-[#F97316]/30 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-200 font-medium backdrop-blur-sm"
+                className="text-sm bg-white/5 text-white/60 border border-white/8 px-5 py-2.5 rounded-full font-medium backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-px"
+                style={
+                  { "--hover-color": accent } as React.CSSProperties
+                }
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.color = accent;
+                  (e.currentTarget as HTMLElement).style.background = `${accent}1a`;
+                  (e.currentTarget as HTMLElement).style.borderColor = `${accent}4d`;
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${accent}20`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.color = "";
+                  (e.currentTarget as HTMLElement).style.background = "";
+                  (e.currentTarget as HTMLElement).style.borderColor = "";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "";
+                }}
               >
                 {k}
               </Link>
@@ -263,10 +327,10 @@ export default function Home() {
       {/* CTA */}
       <section className="max-w-5xl mx-auto px-4 sm:px-8 py-28 sm:py-36 text-center">
         <div
-          className="relative rounded-3xl px-8 py-20 overflow-hidden border border-white/8"
+          className="relative rounded-3xl px-8 py-20 overflow-hidden border border-white/8 transition-all duration-700"
           style={{
-            background: "linear-gradient(135deg, #1a0800 0%, #0F0F0F 40%, #001a0a 100%)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 0 60px rgba(249,115,22,0.08)",
+            background: `linear-gradient(135deg, ${ctaWarmBg} 0%, #0F0F0F 40%, #001008 100%)`,
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 0 60px ${accent}14`,
           }}
         >
           {/* Dot grid */}
@@ -277,8 +341,11 @@ export default function Home() {
               backgroundSize: "24px 24px",
             }}
           />
-          {/* Glow top center */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[200px] bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
+          {/* Glow top */}
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[200px] rounded-full blur-3xl pointer-events-none transition-colors duration-700"
+            style={{ background: `${accent}26` }}
+          />
 
           <h2
             className="text-3xl sm:text-5xl font-extrabold mb-6 tracking-tight relative"
@@ -298,8 +365,8 @@ export default function Home() {
             href={loggedIn ? "/naloge" : "/register"}
             className="relative inline-flex items-center gap-2 text-sm font-bold text-white px-10 py-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 group"
             style={{
-              background: "linear-gradient(135deg, #F97316 0%, #ea580c 100%)",
-              boxShadow: "0 0 40px rgba(249,115,22,0.40), 0 4px 24px rgba(249,115,22,0.25)",
+              background: `linear-gradient(135deg, ${accent} 0%, ${accentDark} 100%)`,
+              boxShadow: `0 0 40px ${accent}66, 0 4px 24px ${accent}40`,
             }}
           >
             {loggedIn ? "Moje naloge" : "Začni danes"}
@@ -315,7 +382,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="text-center sm:text-left">
-              <span className="text-lg font-extrabold text-[#F97316] tracking-tight">Doago</span>
+              <span className="text-lg font-extrabold tracking-tight transition-colors duration-700" style={{ color: accent }}>Doago</span>
               <p className="text-xs text-white/20 mt-1">Slovenska platforma za storitve · 2025</p>
             </div>
             <div className="flex flex-wrap gap-4 sm:gap-6 text-xs text-white/25 justify-center">
