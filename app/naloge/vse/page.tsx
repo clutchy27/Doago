@@ -71,44 +71,48 @@ export default function VseNalogePage() {
   });
 
   if (status === "loading") {
-    return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center"><p className="text-gray-600">Nalaganje...</p></div>;
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <p className="text-[#525252]">Nalaganje...</p>
+      </div>
+    );
   }
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[#0F0F0F]">
       <Nav />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
-        <div className="flex items-center gap-3 mb-7">
+      <main className="max-w-4xl mx-auto px-4 sm:px-8 py-12">
+        <div className="flex items-center gap-3 mb-8">
           <button
             onClick={() => router.push("/naloge")}
-            className="text-sm text-gray-600 hover:text-gray-300 transition-colors duration-150 flex items-center gap-1.5"
+            className="text-sm text-[#525252] hover:text-[#A3A3A3] transition-colors duration-150 flex items-center gap-1.5 font-medium"
           >
             ← Nazaj
           </button>
-          <span className="text-white/10">|</span>
-          <h1 className="text-2xl font-bold text-white">Odprte naloge</h1>
-          <span className="text-xs text-gray-600 bg-white/5 px-2.5 py-1 rounded-full ml-1">{filtered.length}</span>
+          <span className="text-[#2A2A2A]">|</span>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Odprte naloge</h1>
+          <span className="text-xs text-[#525252] bg-[#1A1A1A] border border-[#2A2A2A] px-2.5 py-1 rounded-full ml-1 font-medium">{filtered.length}</span>
         </div>
 
         {isNarocnik && (
-          <div className="bg-orange-500/10 border border-orange-500/20 text-orange-300 rounded-xl px-4 py-3 text-sm mb-6">
+          <div className="bg-[#F97316]/8 border border-[#F97316]/20 text-orange-300 rounded-xl px-4 py-3 text-sm mb-7">
             Stran je namenjena izvajalcem. Preklopite na <strong>Izvajalec</strong> način za sprejemanje nalog.
           </div>
         )}
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 mb-7">
           <div className="flex gap-2 flex-wrap">
             {KATEGORIJE.map((k) => (
               <button
                 key={k}
                 onClick={() => setFilterKat(k)}
-                className={`text-xs px-3.5 py-1.5 rounded-full border transition-all duration-150 ${
+                className={`text-xs px-4 py-1.5 rounded-full border font-medium transition-all duration-150 ${
                   filterKat === k
-                    ? "bg-[#22C55E] text-white border-[#22C55E]"
-                    : "bg-transparent text-gray-500 border-white/10 hover:border-white/20 hover:text-gray-300"
+                    ? "bg-[#22C55E] text-white border-[#22C55E] shadow-md shadow-green-500/20"
+                    : "bg-transparent text-[#525252] border-[#2A2A2A] hover:border-[#444444] hover:text-[#A3A3A3]"
                 }`}
               >
                 {k}
@@ -116,25 +120,25 @@ export default function VseNalogePage() {
             ))}
           </div>
           <select
-            className="bg-[#111111] border border-white/10 rounded-xl px-4 py-2 text-sm text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#22C55E] transition-all sm:ml-auto"
+            className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-2 text-sm text-[#A3A3A3] focus:outline-none focus:ring-2 focus:ring-[#22C55E] transition-all sm:ml-auto hover:border-[#333333]"
             value={filterMesto}
             onChange={(e) => setFilterMesto(e.target.value)}
           >
-            {MESTA.map((m) => <option key={m} className="bg-[#111111]">{m}</option>)}
+            {MESTA.map((m) => <option key={m} className="bg-[#1A1A1A]">{m}</option>)}
           </select>
         </div>
 
         {sporocilo && (
-          <div className="mb-5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl px-4 py-3 text-sm">
-            {sporocilo}
+          <div className="mb-5 bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] rounded-xl px-4 py-3 text-sm">
+            ✓ {sporocilo}
           </div>
         )}
 
         {loading ? (
-          <p className="text-gray-600">Nalaganje nalog...</p>
+          <p className="text-[#525252]">Nalaganje nalog...</p>
         ) : filtered.length === 0 ? (
-          <div className="bg-[#111111] border border-white/5 rounded-2xl p-12 text-center">
-            <p className="text-gray-600">Trenutno ni odprtih nalog v tej kategoriji.</p>
+          <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-16 text-center">
+            <p className="text-[#525252] text-sm">Trenutno ni odprtih nalog v tej kategoriji.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -142,28 +146,28 @@ export default function VseNalogePage() {
               <div
                 key={n.id}
                 onClick={() => router.push(`/naloge/${n.id}`)}
-                className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200 cursor-pointer"
+                className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-[#22C55E]/20 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-green-500/5 transition-all duration-200 cursor-pointer"
               >
                 <div className="flex-1 min-w-0 mr-4">
-                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <h2 className="font-semibold text-white">{n.naslov}</h2>
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 whitespace-nowrap">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 whitespace-nowrap">
                       {n.kategorija}
                     </span>
                   </div>
-                  <p className="text-gray-500 text-sm mb-2 line-clamp-2">{n.opis}</p>
-                  <div className="flex gap-3 text-xs text-gray-600 flex-wrap">
-                    {n.lokacija && <span>{n.lokacija}</span>}
+                  <p className="text-[#A3A3A3] text-sm mb-3 line-clamp-2 leading-relaxed">{n.opis}</p>
+                  <div className="flex gap-3 text-xs text-[#525252] flex-wrap items-center">
+                    {n.lokacija && <span>📍 {n.lokacija}</span>}
                     {n.narocnik && <span>· Naročnik: {n.narocnik.ime}</span>}
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span className={`${accentText} font-bold text-lg`}>{n.cena} €</span>
+                <div className="flex flex-col items-end gap-2.5 shrink-0">
+                  <span className={`${accentText} font-bold text-xl`}>{n.cena} €</span>
                   {!isNarocnik && (
                     <button
                       onClick={(e) => { e.stopPropagation(); sprejmi(n.id, n.naslov); }}
                       disabled={sprejemam === n.id}
-                      className={`text-sm ${accentBg} ${accentHover} text-white px-4 py-1.5 rounded-xl transition-all duration-150 disabled:opacity-50 whitespace-nowrap hover:shadow-md hover:shadow-green-500/20`}
+                      className={`text-sm ${accentBg} ${accentHover} text-white px-4 py-1.5 rounded-xl transition-all duration-150 disabled:opacity-50 whitespace-nowrap font-semibold shadow-md hover:shadow-green-500/25`}
                     >
                       {sprejemam === n.id ? "Sprejemam..." : "Sprejmi"}
                     </button>

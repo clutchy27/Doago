@@ -25,11 +25,11 @@ const KATEGORIJE = ["Hišna opravila", "Prevoz", "IT pomoč", "Pouk", "Vrtnarjen
 const MESTA = ["Ljubljana", "Maribor", "Celje", "Kranj", "Velenje", "Koper", "Novo mesto", "Ptuj", "Murska Sobota", "Nova Gorica", "Domžale", "Kamnik", "Trbovlje", "Krško", "Postojna", "Slovenj Gradec", "Jesenice", "Škofja Loka", "Brežice", "Izola"];
 
 const statusBarva: Record<string, string> = {
-  odprta: "bg-green-500/10 text-green-400 border border-green-500/20",
+  odprta: "bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/25",
   sprejeta: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   "v teku": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   "plačano": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
-  zaprta: "bg-white/5 text-gray-500 border border-white/10",
+  zaprta: "bg-[#1A1A1A] text-[#525252] border border-[#2A2A2A]",
 };
 
 export default function NalogePage() {
@@ -96,7 +96,6 @@ export default function NalogePage() {
     if (res.ok) {
       setModal(false);
       setForm({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "" });
-      // Refresh list
       setLoading(true);
       fetch(`/api/naloge?pogled=${mode}&tab=${tab}`)
         .then((r) => r.json())
@@ -139,7 +138,11 @@ export default function NalogePage() {
   };
 
   if (status === "loading") {
-    return <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center"><p className="text-gray-600">Nalaganje...</p></div>;
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <p className="text-[#525252]">Nalaganje...</p>
+      </div>
+    );
   }
   if (!session) return null;
 
@@ -147,23 +150,25 @@ export default function NalogePage() {
   const isNarocnik = mode === "narocnik";
   const accentBg = isNarocnik ? "bg-[#F97316]" : "bg-[#22C55E]";
   const accentHover = isNarocnik ? "hover:bg-orange-600" : "hover:bg-green-600";
-  const accentShadow = isNarocnik ? "hover:shadow-orange-500/20" : "hover:shadow-green-500/20";
+  const accentShadow = isNarocnik ? "hover:shadow-orange-500/25" : "hover:shadow-green-500/25";
   const accentText = isNarocnik ? "text-[#F97316]" : "text-[#22C55E]";
-  const accentBorder = isNarocnik ? "border-[#F97316]/30" : "border-[#22C55E]/30";
+  const accentGlow = isNarocnik ? "hover:shadow-orange-500/8 hover:border-[#F97316]/20" : "hover:shadow-green-500/8 hover:border-[#22C55E]/20";
+
+  const inputClass = "bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all";
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[#0F0F0F]">
       <Nav badge={neprebrana > 0 ? neprebrana : undefined} />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-8 py-10">
+      <main className="max-w-4xl mx-auto px-4 sm:px-8 py-12">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <div className="flex items-center justify-between mb-10 flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-white tracking-tight">
               {isNarocnik ? "Moje naloge" : "Moje naloge (izvajalec)"}
             </h1>
-            <p className="text-gray-600 text-sm mt-0.5">
+            <p className="text-[#525252] text-sm mt-1">
               {isNarocnik ? "Naloge, ki ste jih objavili" : "Naloge, ki ste jih sprejeli"}
             </p>
           </div>
@@ -171,14 +176,14 @@ export default function NalogePage() {
           {isNarocnik ? (
             <button
               onClick={() => setModal(true)}
-              className={`${accentBg} ${accentHover} text-white px-5 py-2.5 rounded-xl font-semibold transition-all duration-150 text-sm hover:shadow-lg ${accentShadow} hover:-translate-y-0.5`}
+              className={`${accentBg} ${accentHover} text-white px-5 py-2.5 rounded-xl font-semibold transition-all duration-150 text-sm shadow-lg ${accentShadow} hover:-translate-y-0.5`}
             >
               + Nova naloga
             </button>
           ) : (
             <Link
               href="/naloge/vse"
-              className="border border-white/10 text-gray-300 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-white/5 hover:border-white/20 transition-all duration-150 hover:-translate-y-0.5"
+              className="border border-[#333333] text-[#A3A3A3] px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1A1A1A] hover:border-[#444444] hover:text-white transition-all duration-150 hover:-translate-y-0.5"
             >
               Poišči naloge →
             </Link>
@@ -186,15 +191,15 @@ export default function NalogePage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-[#111111] border border-white/5 rounded-xl p-1 w-fit">
+        <div className="flex gap-1 mb-7 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-1 w-fit">
           {(["sprejete", "opravljene"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-150 capitalize ${
+              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
                 tab === t
                   ? `${accentBg} text-white shadow-sm`
-                  : "text-gray-500 hover:text-gray-300"
+                  : "text-[#525252] hover:text-[#A3A3A3]"
               }`}
             >
               {t === "sprejete" ? "Sprejete" : "Opravljene"}
@@ -204,10 +209,10 @@ export default function NalogePage() {
 
         {/* Task list */}
         {loading ? (
-          <p className="text-gray-600">Nalaganje...</p>
+          <p className="text-[#525252]">Nalaganje...</p>
         ) : naloge.length === 0 ? (
-          <div className="bg-[#111111] border border-white/5 rounded-2xl p-12 text-center">
-            <p className="text-gray-600 mb-4">
+          <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-16 text-center">
+            <p className="text-[#525252] mb-5 text-sm">
               {tab === "sprejete"
                 ? isNarocnik ? "Nimate sprejetih nalog." : "Nimate sprejetih nalog."
                 : "Nimate opravljenih nalog."
@@ -216,7 +221,7 @@ export default function NalogePage() {
             {tab === "sprejete" && isNarocnik && (
               <button
                 onClick={() => setModal(true)}
-                className={`${accentBg} ${accentHover} text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-150 text-sm`}
+                className={`${accentBg} ${accentHover} text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-150 text-sm shadow-lg ${accentShadow}`}
               >
                 Objavi prvo nalogo
               </button>
@@ -224,7 +229,7 @@ export default function NalogePage() {
             {tab === "sprejete" && !isNarocnik && (
               <Link
                 href="/naloge/vse"
-                className="inline-block border border-white/10 text-gray-300 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-white/5 transition-all"
+                className="inline-block border border-[#333333] text-[#A3A3A3] px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#242424] transition-all"
               >
                 Poišči naloge →
               </Link>
@@ -236,27 +241,25 @@ export default function NalogePage() {
               <div
                 key={n.id}
                 onClick={() => router.push(`/naloge/${n.id}`)}
-                className={`bg-[#111111] border rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition-all duration-200 cursor-pointer ${
-                  tab === "sprejete" ? `border-white/5 hover:${accentBorder}` : "border-white/5"
-                }`}
+                className={`bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 cursor-pointer ${accentGlow}`}
               >
                 <div className="flex-1 min-w-0 mr-4">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <h2 className="font-semibold text-white">{n.naslov}</h2>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBarva[n.status] ?? "bg-white/5 text-gray-500"}`}>
+                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${statusBarva[n.status] ?? "bg-[#1A1A1A] text-[#525252]"}`}>
                       {n.status}
                     </span>
                   </div>
-                  <p className="text-gray-500 text-sm mb-2 line-clamp-2">{n.opis}</p>
-                  <div className="flex gap-2 text-xs text-gray-600 flex-wrap">
-                    <span>{n.kategorija}</span>
-                    {n.lokacija && <span>· {n.lokacija}</span>}
+                  <p className="text-[#A3A3A3] text-sm mb-3 line-clamp-2 leading-relaxed">{n.opis}</p>
+                  <div className="flex gap-2 text-xs text-[#525252] flex-wrap items-center">
+                    <span className="bg-[#242424] px-2.5 py-1 rounded-full">{n.kategorija}</span>
+                    {n.lokacija && <span>📍 {n.lokacija}</span>}
                     {n.narocnik && <span>· {n.narocnik.ime}</span>}
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span className={`${accentText} font-bold text-lg whitespace-nowrap`}>{n.cena} €</span>
+                <div className="flex flex-col items-end gap-2.5 shrink-0">
+                  <span className={`${accentText} font-bold text-xl whitespace-nowrap`}>{n.cena} €</span>
 
                   {isNarocnik && n.status === "sprejeta" && (
                     <button
@@ -274,9 +277,9 @@ export default function NalogePage() {
                   {isNarocnik && n.status === "plačano" && (
                     <button
                       onClick={(e) => { e.stopPropagation(); setOcenjevanje({ nalogaId: n.id, naslov: n.naslov }); setZvezdice(5); setKomentar(""); }}
-                      className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-xl hover:bg-green-500/20 transition-all duration-150 whitespace-nowrap"
+                      className="text-xs bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 px-3 py-1.5 rounded-xl hover:bg-[#22C55E]/20 transition-all duration-150 whitespace-nowrap"
                     >
-                      Oceni izvajalca
+                      ⭐ Oceni izvajalca
                     </button>
                   )}
                 </div>
@@ -288,18 +291,18 @@ export default function NalogePage() {
 
       {/* Rating modal */}
       {ocenjevanje && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
-          <div className="bg-[#111111] border border-white/10 rounded-2xl w-full max-w-md p-8">
-            <h2 className="text-xl font-bold text-white mb-1">Oceni izvajalca</h2>
-            <p className="text-gray-500 text-sm mb-6">
-              Naloga: <span className="text-gray-300">{ocenjevanje.naslov}</span>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
+          <div className="bg-[#1A1A1A] border border-[#333333] rounded-2xl w-full max-w-md p-8 shadow-2xl shadow-black/60">
+            <h2 className="text-xl font-bold text-white mb-1 tracking-tight">Oceni izvajalca</h2>
+            <p className="text-[#525252] text-sm mb-7">
+              Naloga: <span className="text-[#A3A3A3]">{ocenjevanje.naslov}</span>
             </p>
             <div className="mb-6">
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Ocena</p>
+              <p className="text-xs text-[#525252] uppercase tracking-wider mb-3 font-semibold">Ocena</p>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <button key={s} onClick={() => setZvezdice(s)} className="focus:outline-none transition-all duration-150 hover:scale-110 active:scale-95">
-                    <svg className={`w-9 h-9 ${s <= zvezdice ? accentText : "text-gray-700"} transition-colors duration-150`} fill="currentColor" viewBox="0 0 20 20">
+                    <svg className={`w-9 h-9 ${s <= zvezdice ? accentText : "text-[#2A2A2A]"} transition-colors duration-150`} fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   </button>
@@ -307,9 +310,9 @@ export default function NalogePage() {
               </div>
             </div>
             <div className="mb-6">
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Komentar (neobvezno)</p>
+              <p className="text-xs text-[#525252] uppercase tracking-wider mb-2 font-semibold">Komentar (neobvezno)</p>
               <textarea
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none transition-all w-full"
+                className={`${inputClass} resize-none w-full`}
                 placeholder="Kratko mnenje o izvajalcu..."
                 rows={3}
                 value={komentar}
@@ -317,13 +320,13 @@ export default function NalogePage() {
               />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setOcenjevanje(null)} className="flex-1 border border-white/10 text-gray-400 py-3 rounded-xl font-medium hover:bg-white/5 transition-all duration-150 text-sm">
+              <button onClick={() => setOcenjevanje(null)} className="flex-1 border border-[#333333] text-[#A3A3A3] py-3 rounded-xl font-medium hover:bg-[#242424] transition-all duration-150 text-sm">
                 Prekliči
               </button>
               <button
                 onClick={oddajOceno}
                 disabled={oddajam}
-                className={`flex-1 ${accentBg} ${accentHover} text-white py-3 rounded-xl font-semibold transition-all duration-150 disabled:opacity-50 text-sm`}
+                className={`flex-1 ${accentBg} ${accentHover} text-white py-3 rounded-xl font-semibold transition-all duration-150 disabled:opacity-50 text-sm shadow-lg ${accentShadow}`}
               >
                 {oddajam ? "Oddajam..." : "Oddaj oceno"}
               </button>
@@ -334,28 +337,28 @@ export default function NalogePage() {
 
       {/* Create task modal */}
       {modal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
-          <div className="bg-[#111111] border border-white/10 rounded-2xl w-full max-w-md p-8">
-            <h2 className="text-xl font-bold text-white mb-6">Nova naloga</h2>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
+          <div className="bg-[#1A1A1A] border border-[#333333] rounded-2xl w-full max-w-md p-8 shadow-2xl shadow-black/60">
+            <h2 className="text-xl font-bold text-white mb-7 tracking-tight">Nova naloga</h2>
             {napaka && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-4">{napaka}</div>
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-5">{napaka}</div>
             )}
             <div className="flex flex-col gap-4">
               <input
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all"
+                className={inputClass}
                 placeholder="Naslov naloge"
                 value={form.naslov}
                 onChange={(e) => setForm({ ...form, naslov: e.target.value })}
               />
               <textarea
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none transition-all"
+                className={`${inputClass} resize-none`}
                 placeholder="Opis naloge"
                 rows={3}
                 value={form.opis}
                 onChange={(e) => setForm({ ...form, opis: e.target.value })}
               />
               <input
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all"
+                className={inputClass}
                 placeholder="Cena (€)"
                 type="number"
                 min="0"
@@ -363,21 +366,21 @@ export default function NalogePage() {
                 onChange={(e) => setForm({ ...form, cena: e.target.value })}
               />
               <select
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all"
+                className={inputClass}
                 value={form.kategorija}
                 onChange={(e) => setForm({ ...form, kategorija: e.target.value })}
               >
-                {KATEGORIJE.map((k) => <option key={k} className="bg-[#1a1a1a]">{k}</option>)}
+                {KATEGORIJE.map((k) => <option key={k} className="bg-[#242424]">{k}</option>)}
               </select>
               <select
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all"
+                className={inputClass}
                 value={form.mesto}
                 onChange={(e) => setForm({ ...form, mesto: e.target.value })}
               >
-                {MESTA.map((m) => <option key={m} className="bg-[#1a1a1a]">{m}</option>)}
+                {MESTA.map((m) => <option key={m} className="bg-[#242424]">{m}</option>)}
               </select>
               <input
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all"
+                className={inputClass}
                 placeholder="Ulica (neobvezno)"
                 value={form.ulica}
                 onChange={(e) => setForm({ ...form, ulica: e.target.value })}
@@ -385,14 +388,14 @@ export default function NalogePage() {
               <div className="flex gap-3 mt-2">
                 <button
                   onClick={() => { setModal(false); setNapaka(""); }}
-                  className="flex-1 border border-white/10 text-gray-400 py-3 rounded-xl font-medium hover:bg-white/5 transition-all duration-150 text-sm"
+                  className="flex-1 border border-[#333333] text-[#A3A3A3] py-3 rounded-xl font-medium hover:bg-[#242424] transition-all duration-150 text-sm"
                 >
                   Prekliči
                 </button>
                 <button
                   onClick={objavi}
                   disabled={posiljam}
-                  className={`flex-1 ${accentBg} ${accentHover} text-white py-3 rounded-xl font-semibold transition-all duration-150 disabled:opacity-50 text-sm`}
+                  className={`flex-1 ${accentBg} ${accentHover} text-white py-3 rounded-xl font-semibold transition-all duration-150 disabled:opacity-50 text-sm shadow-lg ${accentShadow}`}
                 >
                   {posiljam ? "Objavljam..." : "Objavi"}
                 </button>

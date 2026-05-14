@@ -23,7 +23,7 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
+    <nav className="sticky top-0 z-40 bg-[#0F0F0F]/90 backdrop-blur-md border-b border-[#2A2A2A]">
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between gap-3">
 
         {/* Logo */}
@@ -36,7 +36,7 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
         </Link>
 
         {/* Mode toggle — center */}
-        <div className="flex bg-[#111111] border border-white/8 rounded-xl p-1 gap-1">
+        <div className="flex bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-1 gap-1">
           <button
             onClick={() => setMode("narocnik")}
             className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
@@ -83,7 +83,7 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute top-full right-0 mt-1 w-44 bg-[#111111] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+            <div className="absolute top-full right-0 mt-1 w-44 bg-[#1A1A1A] border border-[#333333] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
               <Link
                 href="/naloge"
                 onClick={() => setDropdownOpen(false)}
@@ -105,7 +105,7 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
               >
                 Profil
               </Link>
-              <div className="h-px bg-white/8 mx-2" />
+              <div className="h-px bg-[#2A2A2A] mx-2" />
               <button
                 onClick={() => { setDropdownOpen(false); signOut({ callbackUrl: "/prijava" }); }}
                 className="w-full text-left px-4 py-3 text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-all"
@@ -139,7 +139,7 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="sm:hidden border-t border-white/5 bg-[#0d0d0d] px-4 py-3 flex flex-col gap-1">
+        <div className="sm:hidden border-t border-[#2A2A2A] bg-[#141414] px-4 py-3 flex flex-col gap-1">
           {userName && (
             <div className="flex items-center gap-2 px-4 py-2 mb-1">
               <span className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">

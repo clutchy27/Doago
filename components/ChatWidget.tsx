@@ -135,20 +135,20 @@ export default function ChatWidget() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
       {open && (
-        <div className="w-96 h-[500px] bg-[#111111] border border-white/10 rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 shrink-0">
+        <div className="w-96 h-[520px] bg-[#1A1A1A] border border-[#333333] rounded-2xl shadow-2xl shadow-black/70 flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#2A2A2A] shrink-0 bg-[#1A1A1A]">
             {view === "chat" && activeTask ? (
               <>
                 <div className="flex items-center gap-2 min-w-0">
                   <button
                     onClick={backToList}
-                    className="text-gray-500 hover:text-gray-300 transition-colors shrink-0 text-base leading-none"
+                    className="text-[#525252] hover:text-[#A3A3A3] transition-colors shrink-0 text-base leading-none font-medium"
                   >
                     ←
                   </button>
                   <p className="text-white font-semibold text-sm truncate">{activeTask.naslov}</p>
                 </div>
-                <button onClick={() => setOpen(false)} className="text-gray-600 hover:text-gray-300 transition-colors shrink-0 ml-2">
+                <button onClick={() => setOpen(false)} className="text-[#525252] hover:text-[#A3A3A3] transition-colors shrink-0 ml-2">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -156,8 +156,11 @@ export default function ChatWidget() {
               </>
             ) : (
               <>
-                <p className="text-white font-semibold text-sm">Sporočila</p>
-                <button onClick={() => setOpen(false)} className="text-gray-600 hover:text-gray-300 transition-colors">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#22C55E]" />
+                  <p className="text-white font-semibold text-sm">Sporočila</p>
+                </div>
+                <button onClick={() => setOpen(false)} className="text-[#525252] hover:text-[#A3A3A3] transition-colors">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -174,22 +177,25 @@ export default function ChatWidget() {
                   <button
                     key={t.id}
                     onClick={() => openTask(t)}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/5 text-left"
+                    className="w-full px-4 py-3.5 flex items-center gap-3 hover:bg-[#242424] transition-colors border-b border-[#2A2A2A] text-left"
                   >
+                    <div className="w-9 h-9 rounded-full bg-[#242424] border border-[#333333] flex items-center justify-center text-xs font-bold text-[#A3A3A3] shrink-0">
+                      {t.naslov[0].toUpperCase()}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <p className="text-white text-sm font-medium truncate">{t.naslov}</p>
+                        <p className="text-white text-sm font-semibold truncate">{t.naslov}</p>
                         {unread > 0 && (
-                          <span className="bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center shrink-0 font-medium">
+                          <span className="bg-[#F97316] text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center shrink-0 font-bold">
                             {unread > 9 ? "9+" : unread}
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-600 text-xs truncate">
+                      <p className="text-[#525252] text-xs truncate">
                         {t.latestMessage ?? "Brez sporočil"}
                       </p>
                     </div>
-                    <svg className="w-4 h-4 text-gray-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-4 h-4 text-[#333333] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -200,21 +206,21 @@ export default function ChatWidget() {
 
           {view === "chat" && (
             <>
-              <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2">
+              <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
                 {sporocila.length === 0 ? (
-                  <p className="text-gray-600 text-sm text-center mt-10">Še ni sporočil. Začnite pogovor.</p>
+                  <p className="text-[#525252] text-sm text-center mt-12">Še ni sporočil. Začnite pogovor.</p>
                 ) : (
                   sporocila.map((s) => {
                     const moje = s.avtorId === userId;
                     return (
                       <div key={s.id} className={`flex flex-col ${moje ? "items-end" : "items-start"}`}>
-                        <span className="text-xs text-gray-600 mb-0.5 px-1">
+                        <span className="text-xs text-[#525252] mb-1 px-1">
                           {moje ? "Vi" : s.avtorIme} · {formatCas(s.createdAt)}
                         </span>
-                        <div className={`max-w-[78%] px-3 py-2 rounded-2xl text-sm break-words leading-relaxed ${
+                        <div className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm break-words leading-relaxed ${
                           moje
-                            ? "bg-orange-500 text-white rounded-tr-sm"
-                            : "bg-[#1a1a1a] text-gray-200 border border-white/5 rounded-tl-sm"
+                            ? "bg-[#F97316] text-white rounded-tr-sm shadow-md shadow-orange-500/20"
+                            : "bg-[#242424] text-[#A3A3A3] border border-[#333333] rounded-tl-sm"
                         }`}>
                           {s.besedilo}
                         </div>
@@ -225,10 +231,10 @@ export default function ChatWidget() {
                 <div ref={bottomRef} />
               </div>
 
-              <div className="px-3 py-2.5 border-t border-white/5 flex gap-2 shrink-0">
+              <div className="px-3 py-3 border-t border-[#2A2A2A] flex gap-2 shrink-0 bg-[#1A1A1A]">
                 <input
                   ref={inputRef}
-                  className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm transition-all"
+                  className="flex-1 bg-[#242424] border border-[#333333] rounded-xl px-3.5 py-2.5 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent text-sm transition-all"
                   placeholder="Napišite sporočilo..."
                   value={novo}
                   onChange={(e) => setNovo(e.target.value)}
@@ -237,7 +243,7 @@ export default function ChatWidget() {
                 <button
                   onClick={posli}
                   disabled={posiljam || !novo.trim()}
-                  className="bg-orange-500 text-white px-3 py-2 rounded-xl hover:bg-orange-600 transition-all duration-150 disabled:opacity-40 shrink-0"
+                  className="bg-[#F97316] text-white px-3.5 py-2.5 rounded-xl hover:bg-orange-600 transition-all duration-150 disabled:opacity-40 shrink-0 shadow-md shadow-orange-500/20"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -251,7 +257,7 @@ export default function ChatWidget() {
 
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="w-14 h-14 bg-orange-500 hover:bg-orange-600 rounded-full shadow-lg shadow-orange-500/30 flex items-center justify-center transition-all duration-150 hover:scale-105 active:scale-95 relative"
+        className="w-14 h-14 bg-[#F97316] hover:bg-orange-600 rounded-full shadow-2xl shadow-orange-500/40 flex items-center justify-center transition-all duration-150 hover:scale-105 active:scale-95 relative"
       >
         {open ? (
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -263,7 +269,7 @@ export default function ChatWidget() {
           </svg>
         )}
         {!open && totalUnread > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center font-medium">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center font-bold shadow-md">
             {totalUnread > 9 ? "9+" : totalUnread}
           </span>
         )}
