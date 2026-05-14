@@ -48,7 +48,7 @@ export default function Home() {
             </Link>
             <div className="flex items-center justify-center gap-2 sm:gap-3">
               <Link
-                href="/login"
+                href="/prijava"
                 className="text-sm text-gray-400 hover:text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-white/5 transition-all duration-150"
               >
                 Prijavi se
