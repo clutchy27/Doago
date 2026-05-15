@@ -154,7 +154,7 @@ export default function Home() {
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
-              href={loggedIn ? "/naloge" : "/register"}
+              href={loggedIn ? "/naloge/moje" : "/register"}
               className="relative inline-flex items-center gap-2 text-sm font-bold text-white px-8 py-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 group"
               style={{
                 background: `linear-gradient(135deg, ${accent} 0%, ${accentDark} 100%)`,
@@ -362,7 +362,7 @@ export default function Home() {
             Registracija je brezplačna in traja manj kot minuto. Objavi svojo prvo nalogo še danes.
           </p>
           <Link
-            href={loggedIn ? "/naloge" : "/register"}
+            href={loggedIn ? "/naloge/moje" : "/register"}
             className="relative inline-flex items-center gap-2 text-sm font-bold text-white px-10 py-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 group"
             style={{
               background: `linear-gradient(135deg, ${accent} 0%, ${accentDark} 100%)`,

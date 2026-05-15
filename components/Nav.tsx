@@ -59,61 +59,74 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
           </button>
         </div>
 
-        {/* Right: user dropdown (desktop) */}
-        <div className="hidden sm:flex items-center shrink-0 relative" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="relative flex items-center gap-2 text-sm text-gray-400 hover:text-white px-3 py-2 rounded-xl hover:bg-white/5 transition-all"
+        {/* Right: Moje naloge + user dropdown (desktop) */}
+        <div className="hidden sm:flex items-center gap-1 shrink-0">
+          <Link
+            href="/naloge/moje"
+            className={`text-sm font-medium px-3 py-2 rounded-xl transition-all duration-150 ${
+              current === "moje"
+                ? "text-white bg-white/8"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
+            }`}
           >
-            <span className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
-              {userName ? userName[0].toUpperCase() : "?"}
-            </span>
-            {userName && <span>{userName}</span>}
-            <svg className="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-            {!!badge && badge > 0 && (
-              <span
-                className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
-                style={{ background: "var(--accent)" }}
-              >
-                {badge}
-              </span>
-            )}
-          </button>
+            Moje naloge
+          </Link>
 
-          {dropdownOpen && (
-            <div className="absolute top-full right-0 mt-1 w-44 bg-[#1A1A1A] border border-[#333333] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
-              <Link
-                href="/naloge"
-                onClick={() => setDropdownOpen(false)}
-                className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-              >
-                Moje naloge
-              </Link>
-              <Link
-                href="/naloge/vse"
-                onClick={() => setDropdownOpen(false)}
-                className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-              >
-                Vse naloge
-              </Link>
-              <Link
-                href="/profil"
-                onClick={() => setDropdownOpen(false)}
-                className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-              >
-                Profil
-              </Link>
-              <div className="h-px bg-[#2A2A2A] mx-2" />
-              <button
-                onClick={() => { setDropdownOpen(false); signOut({ callbackUrl: "/prijava" }); }}
-                className="w-full text-left px-4 py-3 text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-all"
-              >
-                Odjava
-              </button>
-            </div>
-          )}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="relative flex items-center gap-2 text-sm text-gray-400 hover:text-white px-3 py-2 rounded-xl hover:bg-white/5 transition-all"
+            >
+              <span className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
+                {userName ? userName[0].toUpperCase() : "?"}
+              </span>
+              {userName && <span>{userName}</span>}
+              <svg className="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              {!!badge && badge > 0 && (
+                <span
+                  className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                  style={{ background: "var(--accent)" }}
+                >
+                  {badge}
+                </span>
+              )}
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute top-full right-0 mt-1 w-44 bg-[#1A1A1A] border border-[#333333] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+                <Link
+                  href="/naloge/moje"
+                  onClick={() => setDropdownOpen(false)}
+                  className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  Moje naloge
+                </Link>
+                <Link
+                  href="/naloge/vse"
+                  onClick={() => setDropdownOpen(false)}
+                  className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  Vse naloge
+                </Link>
+                <Link
+                  href="/profil"
+                  onClick={() => setDropdownOpen(false)}
+                  className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  Profil
+                </Link>
+                <div className="h-px bg-[#2A2A2A] mx-2" />
+                <button
+                  onClick={() => { setDropdownOpen(false); signOut({ callbackUrl: "/prijava" }); }}
+                  className="w-full text-left px-4 py-3 text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/5 transition-all"
+                >
+                  Odjava
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mobile hamburger */}
@@ -149,7 +162,7 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
             </div>
           )}
           <Link
-            href="/naloge"
+            href="/naloge/moje"
             onClick={() => setMobileOpen(false)}
             className="text-sm px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
           >
