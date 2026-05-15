@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { pool } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const { ime, email, geslo, vloga, sp, student } = await req.json();
+    const { ime, email, geslo, vloga, sp } = await req.json();
 
     if (!ime || !email || !geslo) {
       return NextResponse.json({ error: "Vsa polja so obvezna" }, { status: 400 });
@@ -21,15 +20,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Davčna številka mora biti točno 8 številk" }, { status: 400 });
       }
       if (!sp.iban.startsWith("SI56")) {
-        return NextResponse.json({ error: "IBAN mora začeti s SI56" }, { status: 400 });
-      }
-    }
-
-    if (vlogaValue === "student") {
-      if (!student || !student.ime || !student.priimek || !student.indeks || !student.fakulteta || !student.iban) {
-        return NextResponse.json({ error: "Vsa polja študenta so obvezna" }, { status: 400 });
-      }
-      if (!student.iban.startsWith("SI56")) {
         return NextResponse.json({ error: "IBAN mora začeti s SI56" }, { status: 400 });
       }
     }
@@ -56,14 +46,6 @@ export async function POST(req: NextRequest) {
           userId: user.id,
         },
       });
-    }
-
-    if (vlogaValue === "student" && student) {
-      await pool.query(
-        `INSERT INTO "StudentPodatki" (id, ime, priimek, indeks, fakulteta, iban, "createdAt", "updatedAt", "userId")
-         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NOW(), NOW(), $6)`,
-        [student.ime.trim(), student.priimek.trim(), student.indeks.trim(), student.fakulteta, student.iban.trim(), user.id]
-      );
     }
 
     return NextResponse.json({ success: true });
