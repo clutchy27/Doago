@@ -4,28 +4,54 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { ime, email, geslo } = await req.json();
+    const { ime, email, geslo, vloga, sp } = await req.json();
 
     if (!ime || !email || !geslo) {
       return NextResponse.json({ error: "Vsa polja so obvezna" }, { status: 400 });
     }
 
-    const obstojeci = await prisma.user.findUnique({ where: { email } });
+    const vlogaValue = vloga === "izvajalec" ? "izvajalec" : "narocnik";
 
+    if (vlogaValue === "izvajalec") {
+      if (!sp || !sp.ime || !sp.priimek || !sp.davcnaStevilka || !sp.iban || !sp.naslov) {
+        return NextResponse.json({ error: "Vsa polja s.p. so obvezna" }, { status: 400 });
+      }
+      if (!/^\d{8}$/.test(sp.davcnaStevilka)) {
+        return NextResponse.json({ error: "Davčna številka mora biti točno 8 številk" }, { status: 400 });
+      }
+      if (!sp.iban.startsWith("SI56")) {
+        return NextResponse.json({ error: "IBAN mora začeti s SI56" }, { status: 400 });
+      }
+    }
+
+    const obstojeci = await prisma.user.findUnique({ where: { email } });
     if (obstojeci) {
       return NextResponse.json({ error: "Email je že zaseden" }, { status: 400 });
     }
 
     const hashGeslo = await bcrypt.hash(geslo, 10);
 
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         ime,
         email,
         geslo: hashGeslo,
-        vloga: "oboje",
+        vloga: vlogaValue,
       },
     });
+
+    if (vlogaValue === "izvajalec" && sp) {
+      await prisma.spPodatki.create({
+        data: {
+          ime: sp.ime.trim(),
+          priimek: sp.priimek.trim(),
+          davcnaStevilka: sp.davcnaStevilka.trim(),
+          iban: sp.iban.trim(),
+          naslov: sp.naslov.trim(),
+          userId: user.id,
+        },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {

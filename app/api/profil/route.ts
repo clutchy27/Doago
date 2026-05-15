@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const userId = (token.sub ?? token.id) as string;
 
     const { rows: userRows } = await pool.query(
-      `SELECT id, ime, email FROM "User" WHERE id = $1`,
+      `SELECT id, ime, email, vloga FROM "User" WHERE id = $1`,
       [userId]
     );
     if (userRows.length === 0) return NextResponse.json({ error: "Uporabnik ni najden" }, { status: 404 });
@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       ime: user.ime,
       email: user.email,
+      vloga: user.vloga,
       narocnik: {
         steviloObjavljenih: parseInt(narocnikRes.rows[0].stevilo_objavljenih) || 0,
         steviloOpravljenih: parseInt(narocnikRes.rows[0].stevilo_opravljenih) || 0,
