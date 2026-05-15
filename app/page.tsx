@@ -38,7 +38,7 @@ export default function Home() {
   const { status } = useSession();
   const { mode } = useMode();
   const loggedIn = status === "authenticated";
-  const isIzvajalec = mode === "izvajalec";
+  const isIzvajalec = loggedIn && mode === "izvajalec";
 
   // Accent palette — switches with mode
   const accent      = isIzvajalec ? "#22C55E" : "#F97316";
