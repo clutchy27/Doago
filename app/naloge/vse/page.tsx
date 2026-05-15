@@ -13,6 +13,7 @@ type Naloga = {
   kategorija: string;
   lokacija: string;
   status: string;
+  nujna: boolean;
   createdAt: string;
   narocnik?: { ime: string };
 };
@@ -29,6 +30,7 @@ export default function VseNalogePage() {
   const [loading, setLoading] = useState(true);
   const [filterKat, setFilterKat] = useState("Vse");
   const [filterMesto, setFilterMesto] = useState("Vsa mesta");
+  const [filterNujne, setFilterNujne] = useState(false);
   const [sprejemam, setSprejemam] = useState<string | null>(null);
   const [sporocilo, setSporocilo] = useState<string | null>(null);
 
@@ -67,7 +69,8 @@ export default function VseNalogePage() {
   const filtered = naloge.filter((n) => {
     const katOk = filterKat === "Vse" || n.kategorija === filterKat;
     const mestoOk = filterMesto === "Vsa mesta" || n.lokacija.startsWith(filterMesto);
-    return katOk && mestoOk;
+    const nujnaOk = !filterNujne || n.nujna;
+    return katOk && mestoOk && nujnaOk;
   });
 
   if (status === "loading") {
@@ -118,6 +121,16 @@ export default function VseNalogePage() {
                 {k}
               </button>
             ))}
+            <button
+              onClick={() => setFilterNujne(!filterNujne)}
+              className={`text-xs px-4 py-1.5 rounded-full border font-medium transition-all duration-150 ${
+                filterNujne
+                  ? "bg-red-500/15 text-red-400 border-red-500/40 shadow-md shadow-red-500/10"
+                  : "bg-transparent text-[#525252] border-[#2A2A2A] hover:border-red-500/30 hover:text-red-400"
+              }`}
+            >
+              🔴 Samo nujne
+            </button>
           </div>
           <select
             className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-2 text-sm text-[#A3A3A3] focus:outline-none focus:ring-2 focus:ring-[#22C55E] transition-all sm:ml-auto hover:border-[#333333]"
@@ -146,10 +159,19 @@ export default function VseNalogePage() {
               <div
                 key={n.id}
                 onClick={() => router.push(`/naloge/${n.id}`)}
-                className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:border-[#22C55E]/20 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-green-500/5 transition-all duration-200 cursor-pointer"
+                className={`rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 cursor-pointer ${
+                  n.nujna
+                    ? "bg-[#1A1A1A] border border-red-500/30 shadow-[0_0_16px_rgba(239,68,68,0.07)] hover:border-red-500/50 hover:shadow-red-500/10"
+                    : `bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#22C55E]/20 hover:shadow-green-500/5 ${filterNujne ? "opacity-40" : ""}`
+                }`}
               >
                 <div className="flex-1 min-w-0 mr-4">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    {n.nujna && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-red-500/15 text-red-400 border border-red-500/30 uppercase tracking-wide whitespace-nowrap">
+                        🔴 Nujno
+                      </span>
+                    )}
                     <h2 className="font-semibold text-white">{n.naslov}</h2>
                     <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 whitespace-nowrap">
                       {n.kategorija}

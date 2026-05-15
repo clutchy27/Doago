@@ -14,6 +14,7 @@ type Naloga = {
   kategorija: string;
   lokacija: string;
   status: string;
+  nujna: boolean;
   createdAt: string;
   narocnik?: { ime: string };
 };
@@ -44,7 +45,7 @@ export default function NalogePage() {
 
   // Create task modal
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "" });
+  const [form, setForm] = useState({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "", nujna: false });
   const [napaka, setNapaka] = useState("");
   const [posiljam, setPosiljam] = useState(false);
 
@@ -90,12 +91,13 @@ export default function NalogePage() {
         cena: form.cena,
         kategorija: form.kategorija,
         lokacija: form.ulica ? `${form.mesto}, ${form.ulica}` : form.mesto,
+        nujna: form.nujna,
       }),
     });
     const data = await res.json();
     if (res.ok) {
       setModal(false);
-      setForm({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "" });
+      setForm({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "", nujna: false });
       setLoading(true);
       fetch(`/api/naloge?pogled=${mode}&tab=${tab}`)
         .then((r) => r.json())
@@ -241,10 +243,15 @@ export default function NalogePage() {
               <div
                 key={n.id}
                 onClick={() => router.push(`/naloge/${n.id}`)}
-                className={`bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 cursor-pointer ${accentGlow}`}
+                className={`bg-[#1A1A1A] rounded-2xl p-5 sm:p-6 flex items-start justify-between hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 cursor-pointer ${accentGlow} ${n.nujna ? "border border-red-500/30 shadow-[0_0_16px_rgba(239,68,68,0.08)]" : "border border-[#2A2A2A]"}`}
               >
                 <div className="flex-1 min-w-0 mr-4">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    {n.nujna && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-red-500/15 text-red-400 border border-red-500/30 uppercase tracking-wide">
+                        🔴 Nujno
+                      </span>
+                    )}
                     <h2 className="font-semibold text-white">{n.naslov}</h2>
                     <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${statusBarva[n.status] ?? "bg-[#1A1A1A] text-[#525252]"}`}>
                       {n.status}
@@ -385,6 +392,29 @@ export default function NalogePage() {
                 value={form.ulica}
                 onChange={(e) => setForm({ ...form, ulica: e.target.value })}
               />
+
+              {/* Nujna toggle */}
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, nujna: !form.nujna })}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-150 text-left ${
+                  form.nujna
+                    ? "bg-red-500/10 border-red-500/30 text-red-400"
+                    : "bg-[#242424] border-[#333333] text-[#525252] hover:border-[#444444] hover:text-[#A3A3A3]"
+                }`}
+              >
+                <span className="text-base">🔴</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">Nujna naloga — potrebujem danes</p>
+                  {form.nujna && (
+                    <p className="text-xs mt-0.5 text-red-400/70">Izvajalci bodo obveščeni, da je naloga nujna</p>
+                  )}
+                </div>
+                <div className={`w-9 h-5 rounded-full transition-colors duration-150 flex items-center px-0.5 shrink-0 ${form.nujna ? "bg-red-500" : "bg-[#333333]"}`}>
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-150 ${form.nujna ? "translate-x-4" : "translate-x-0"}`} />
+                </div>
+              </button>
+
               <div className="flex gap-3 mt-2">
                 <button
                   onClick={() => { setModal(false); setNapaka(""); }}

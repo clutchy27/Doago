@@ -12,6 +12,7 @@ const initPromise = pool.query(`
     kategorija  TEXT NOT NULL,
     lokacija    TEXT NOT NULL DEFAULT '',
     status      TEXT NOT NULL DEFAULT 'odprta',
+    nujna       BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "narocnikId" TEXT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE
   )
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { naslov, opis, kategorija, lokacija } = body;
     const cena = typeof body.cena === "string" ? parseFloat(body.cena) : Number(body.cena);
+    const nujna = body.nujna === true;
 
     if (!naslov || !opis || !kategorija || !lokacija || isNaN(cena) || cena < 0) {
       return NextResponse.json({ error: "Vsa polja so obvezna" }, { status: 400 });
@@ -114,10 +116,10 @@ export async function POST(req: NextRequest) {
     const id = crypto.randomUUID();
 
     const { rows } = await pool.query(
-      `INSERT INTO "Naloga" (id, naslov, opis, cena, kategorija, lokacija, "narocnikId")
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO "Naloga" (id, naslov, opis, cena, kategorija, lokacija, nujna, "narocnikId")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [id, naslov, opis, cena, kategorija, lokacija, userId]
+      [id, naslov, opis, cena, kategorija, lokacija, nujna, userId]
     );
 
     // Send confirmation email (fire-and-forget)
