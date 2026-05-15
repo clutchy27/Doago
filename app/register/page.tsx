@@ -11,11 +11,27 @@ type SpForm = {
   naslov: string;
 };
 
+type StudentForm = {
+  ime: string;
+  priimek: string;
+  indeks: string;
+  fakulteta: string;
+  iban: string;
+};
+
+type Vloga = "narocnik" | "izvajalec" | "student";
+
+const FAKULTETE = ["UL", "UM", "UP", "UNG", "UNM", "Druga"];
+
+const INPUT_CLASS =
+  "w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all";
+
 export default function Register() {
   const router = useRouter();
-  const [vloga, setVloga] = useState<"narocnik" | "izvajalec">("narocnik");
+  const [vloga, setVloga] = useState<Vloga>("narocnik");
   const [form, setForm] = useState({ ime: "", email: "", geslo: "" });
   const [spForm, setSpForm] = useState<SpForm>({ ime: "", priimek: "", davcnaStevilka: "", iban: "", naslov: "" });
+  const [studentForm, setStudentForm] = useState<StudentForm>({ ime: "", priimek: "", indeks: "", fakulteta: "UL", iban: "" });
   const [napaka, setNapaka] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -34,11 +50,28 @@ export default function Register() {
         return;
       }
     }
+    if (vloga === "student") {
+      if (!studentForm.indeks.trim()) {
+        setNapaka("Številka indeksa je obvezna");
+        return;
+      }
+      if (!studentForm.iban.startsWith("SI56")) {
+        setNapaka("IBAN mora začeti s SI56");
+        return;
+      }
+      if (!studentForm.ime.trim() || !studentForm.priimek.trim()) {
+        setNapaka("Ime in priimek sta obvezna");
+        return;
+      }
+    }
     setLoading(true);
     setNapaka("");
-    const body = vloga === "izvajalec"
-      ? { ...form, vloga, sp: spForm }
-      : { ...form, vloga };
+    const body =
+      vloga === "izvajalec"
+        ? { ...form, vloga, sp: spForm }
+        : vloga === "student"
+        ? { ...form, vloga, student: studentForm }
+        : { ...form, vloga };
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -53,18 +86,18 @@ export default function Register() {
     }
   };
 
-  const isIzvajalec = vloga === "izvajalec";
-  const accent = isIzvajalec ? "#22C55E" : "#F97316";
-  const accentBg = isIzvajalec ? "rgba(34,197,94,0.08)" : "rgba(249,115,22,0.08)";
-  const accentBorder = isIzvajalec ? "rgba(34,197,94,0.15)" : "rgba(249,115,22,0.15)";
-  const focusRing = isIzvajalec ? "focus:ring-green-500" : "focus:ring-[#F97316]";
+  const isGreen = vloga === "izvajalec" || vloga === "student";
+  const accentBg = isGreen ? "rgba(34,197,94,0.08)" : "rgba(249,115,22,0.08)";
+  const accentBorder = isGreen ? "rgba(34,197,94,0.15)" : "rgba(249,115,22,0.15)";
+
+  const icon = vloga === "narocnik" ? "🚀" : vloga === "student" ? "🎓" : "🛠️";
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] flex flex-col">
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: isIzvajalec
+          background: isGreen
             ? "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(34,197,94,0.06), transparent)"
             : "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(249,115,22,0.06), transparent)",
         }}
@@ -89,7 +122,7 @@ export default function Register() {
               className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 text-2xl border"
               style={{ background: accentBg, borderColor: accentBorder }}
             >
-              {isIzvajalec ? "🛠️" : "🚀"}
+              {icon}
             </div>
             <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Ustvari račun</h1>
             <p className="text-[#525252] text-sm">Pridruži se Doago skupnosti</p>
@@ -107,39 +140,39 @@ export default function Register() {
               <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-3 block">
                 Registriram se kot:
               </label>
-              <div className="grid grid-cols-2 gap-2 bg-[#111111] rounded-xl p-1 border border-[#2A2A2A]">
-                <button
-                  type="button"
-                  onClick={() => setVloga("narocnik")}
-                  className="py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-150"
-                  style={
-                    vloga === "narocnik"
-                      ? { background: "rgba(249,115,22,0.15)", color: "#F97316", border: "1px solid rgba(249,115,22,0.3)" }
-                      : { color: "#525252", border: "1px solid transparent" }
-                  }
-                >
-                  Naročnik
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setVloga("izvajalec")}
-                  className="py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-150"
-                  style={
-                    vloga === "izvajalec"
-                      ? { background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)" }
-                      : { color: "#525252", border: "1px solid transparent" }
-                  }
-                >
-                  Izvajalec (s.p.)
-                </button>
+              <div className="grid grid-cols-3 gap-2 bg-[#111111] rounded-xl p-1 border border-[#2A2A2A]">
+                {(
+                  [
+                    { key: "narocnik", label: "Naročnik" },
+                    { key: "izvajalec", label: "Izvajalec (s.p.)" },
+                    { key: "student", label: "Izvajalec (študent)" },
+                  ] as { key: Vloga; label: string }[]
+                ).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setVloga(key)}
+                    className="py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-150 leading-tight"
+                    style={
+                      vloga === key
+                        ? key === "narocnik"
+                          ? { background: "rgba(249,115,22,0.15)", color: "#F97316", border: "1px solid rgba(249,115,22,0.3)" }
+                          : { background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)" }
+                        : { color: "#525252", border: "1px solid transparent" }
+                    }
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
 
             <div className="flex flex-col gap-4">
+              {/* Base fields */}
               <div>
                 <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Ime in priimek</label>
                 <input
-                  className={`w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 ${focusRing} focus:border-transparent transition-all`}
+                  className={`w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 ${isGreen ? "focus:ring-green-500" : "focus:ring-[#F97316]"} focus:border-transparent transition-all`}
                   placeholder="Ana Novak"
                   value={form.ime}
                   onChange={(e) => setForm({ ...form, ime: e.target.value })}
@@ -148,7 +181,7 @@ export default function Register() {
               <div>
                 <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Email</label>
                 <input
-                  className={`w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 ${focusRing} focus:border-transparent transition-all`}
+                  className={`w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 ${isGreen ? "focus:ring-green-500" : "focus:ring-[#F97316]"} focus:border-transparent transition-all`}
                   placeholder="ana@primer.si"
                   type="email"
                   value={form.email}
@@ -158,78 +191,140 @@ export default function Register() {
               <div>
                 <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Geslo</label>
                 <input
-                  className={`w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 ${focusRing} focus:border-transparent transition-all`}
+                  className={`w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 ${isGreen ? "focus:ring-green-500" : "focus:ring-[#F97316]"} focus:border-transparent transition-all`}
                   placeholder="••••••••"
                   type="password"
                   value={form.geslo}
                   onChange={(e) => setForm({ ...form, geslo: e.target.value })}
-                  onKeyDown={(e) => !isIzvajalec && e.key === "Enter" && handleSubmit()}
+                  onKeyDown={(e) => vloga === "narocnik" && e.key === "Enter" && handleSubmit()}
                 />
               </div>
 
               {/* S.p. fields */}
-              {isIzvajalec && (
-                <>
-                  <div className="border-t border-[#2A2A2A] pt-4 mt-1">
-                    <p className="text-xs text-green-400 font-semibold uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                      <span>🛠</span> Podatki s.p.
-                    </p>
-                    <div className="flex flex-col gap-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Ime</label>
-                          <input
-                            className="w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                            placeholder="Ana"
-                            value={spForm.ime}
-                            onChange={(e) => setSpForm({ ...spForm, ime: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Priimek</label>
-                          <input
-                            className="w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                            placeholder="Novak"
-                            value={spForm.priimek}
-                            onChange={(e) => setSpForm({ ...spForm, priimek: e.target.value })}
-                          />
-                        </div>
-                      </div>
+              {vloga === "izvajalec" && (
+                <div className="border-t border-[#2A2A2A] pt-4 mt-1">
+                  <p className="text-xs text-green-400 font-semibold uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                    🛠 Podatki s.p.
+                  </p>
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Davčna številka</label>
+                        <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Ime</label>
                         <input
-                          className="w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                          placeholder="12345678"
-                          maxLength={8}
-                          value={spForm.davcnaStevilka}
-                          onChange={(e) => setSpForm({ ...spForm, davcnaStevilka: e.target.value.replace(/\D/g, "") })}
+                          className={INPUT_CLASS}
+                          placeholder="Ana"
+                          value={spForm.ime}
+                          onChange={(e) => setSpForm({ ...spForm, ime: e.target.value })}
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">IBAN</label>
+                        <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Priimek</label>
                         <input
-                          className="w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono"
-                          placeholder="SI56 0000 0000 0000 000"
-                          value={spForm.iban}
-                          onChange={(e) => setSpForm({ ...spForm, iban: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Naslov</label>
-                        <input
-                          className="w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                          placeholder="Slovenska ulica 1, 1000 Ljubljana"
-                          value={spForm.naslov}
-                          onChange={(e) => setSpForm({ ...spForm, naslov: e.target.value })}
-                          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                          className={INPUT_CLASS}
+                          placeholder="Novak"
+                          value={spForm.priimek}
+                          onChange={(e) => setSpForm({ ...spForm, priimek: e.target.value })}
                         />
                       </div>
                     </div>
+                    <div>
+                      <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Davčna številka</label>
+                      <input
+                        className={INPUT_CLASS}
+                        placeholder="12345678"
+                        maxLength={8}
+                        value={spForm.davcnaStevilka}
+                        onChange={(e) => setSpForm({ ...spForm, davcnaStevilka: e.target.value.replace(/\D/g, "") })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">IBAN</label>
+                      <input
+                        className={`${INPUT_CLASS} font-mono`}
+                        placeholder="SI56 0000 0000 0000 000"
+                        value={spForm.iban}
+                        onChange={(e) => setSpForm({ ...spForm, iban: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Naslov</label>
+                      <input
+                        className={INPUT_CLASS}
+                        placeholder="Slovenska ulica 1, 1000 Ljubljana"
+                        value={spForm.naslov}
+                        onChange={(e) => setSpForm({ ...spForm, naslov: e.target.value })}
+                        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                      />
+                    </div>
                   </div>
-                </>
+                </div>
               )}
 
-              {!isIzvajalec && (
+              {/* Student fields */}
+              {vloga === "student" && (
+                <div className="border-t border-[#2A2A2A] pt-4 mt-1">
+                  <p className="text-xs text-green-400 font-semibold uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                    🎓 Podatki študenta
+                  </p>
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Ime</label>
+                        <input
+                          className={INPUT_CLASS}
+                          placeholder="Ana"
+                          value={studentForm.ime}
+                          onChange={(e) => setStudentForm({ ...studentForm, ime: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Priimek</label>
+                        <input
+                          className={INPUT_CLASS}
+                          placeholder="Novak"
+                          value={studentForm.priimek}
+                          onChange={(e) => setStudentForm({ ...studentForm, priimek: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Številka indeksa</label>
+                      <input
+                        className={INPUT_CLASS}
+                        placeholder="63210001"
+                        value={studentForm.indeks}
+                        onChange={(e) => setStudentForm({ ...studentForm, indeks: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">Fakulteta</label>
+                      <select
+                        className={`${INPUT_CLASS} appearance-none cursor-pointer`}
+                        value={studentForm.fakulteta}
+                        onChange={(e) => setStudentForm({ ...studentForm, fakulteta: e.target.value })}
+                      >
+                        {FAKULTETE.map((f) => (
+                          <option key={f} value={f} className="bg-[#1A1A1A]">
+                            {f}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#525252] font-semibold uppercase tracking-wider mb-2 block">IBAN</label>
+                      <input
+                        className={`${INPUT_CLASS} font-mono`}
+                        placeholder="SI56 0000 0000 0000 000"
+                        value={studentForm.iban}
+                        onChange={(e) => setStudentForm({ ...studentForm, iban: e.target.value })}
+                        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {vloga === "narocnik" && (
                 <div
                   className="rounded-xl px-4 py-3 text-center"
                   style={{ background: accentBg, border: `1px solid ${accentBorder}` }}
@@ -244,8 +339,8 @@ export default function Register() {
                 disabled={loading}
                 className="py-3.5 rounded-xl font-bold transition-all duration-150 disabled:opacity-50 mt-1 shadow-lg hover:-translate-y-0.5 text-white"
                 style={{
-                  background: isIzvajalec ? "#22C55E" : "#F97316",
-                  boxShadow: isIzvajalec ? "0 4px 20px rgba(34,197,94,0.2)" : "0 4px 20px rgba(249,115,22,0.2)",
+                  background: isGreen ? "#22C55E" : "#F97316",
+                  boxShadow: isGreen ? "0 4px 20px rgba(34,197,94,0.2)" : "0 4px 20px rgba(249,115,22,0.2)",
                 }}
               >
                 {loading ? "Ustvarjam..." : "Ustvari račun"}

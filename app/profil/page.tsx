@@ -29,6 +29,16 @@ type SpPodatki = {
   naslov: string;
 };
 
+type StudentPodatki = {
+  ime: string;
+  priimek: string;
+  indeks: string;
+  fakulteta: string;
+  iban: string;
+};
+
+const FAKULTETE = ["UL", "UM", "UP", "UNG", "UNM", "Druga"];
+
 function Zvezdice({ ocena, stevilo }: { ocena: number | null; stevilo?: number }) {
   if (ocena === null || ocena === undefined) {
     return <span className="text-gray-600 text-sm">Brez ocen</span>;
@@ -60,6 +70,7 @@ export default function ProfilPage() {
   const router = useRouter();
   const [profil, setProfil] = useState<Profil | null>(null);
   const [spPodatki, setSpPodatki] = useState<SpPodatki | null>(null);
+  const [studentPodatki, setStudentPodatki] = useState<StudentPodatki | null>(null);
   const [loading, setLoading] = useState(true);
   const [urejanje, setUrejanje] = useState(false);
   const [imeForm, setImeForm] = useState("");
@@ -70,6 +81,11 @@ export default function ProfilPage() {
   const [spForm, setSpForm] = useState<SpPodatki>({ ime: "", priimek: "", davcnaStevilka: "", iban: "", naslov: "" });
   const [shranjujemSp, setShranjujemSp] = useState(false);
   const [napakaSp, setNapakaSp] = useState("");
+
+  const [urejanjeStudentPodatkov, setUrejanjeStudentPodatkov] = useState(false);
+  const [studentForm, setStudentForm] = useState<StudentPodatki>({ ime: "", priimek: "", indeks: "", fakulteta: "UL", iban: "" });
+  const [shranjujemStudent, setShranjujemStudent] = useState(false);
+  const [napakaStudent, setNapakaStudent] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/prijava");
@@ -87,6 +103,11 @@ export default function ProfilPage() {
               fetch("/api/profil/sp")
                 .then((r) => r.json())
                 .then((sp) => { if (!sp.error) setSpPodatki(sp); });
+            }
+            if (data.vloga === "student") {
+              fetch("/api/profil/student")
+                .then((r) => r.json())
+                .then((st) => { if (!st.error) setStudentPodatki(st); });
             }
           }
           setLoading(false);
@@ -145,6 +166,38 @@ export default function ProfilPage() {
     setUrejanjeSpPodatkov(true);
   };
 
+  const shraniStudentPodatke = async () => {
+    setNapakaStudent("");
+    if (!studentForm.iban.startsWith("SI56")) {
+      setNapakaStudent("IBAN mora začeti s SI56");
+      return;
+    }
+    if (!studentForm.indeks.trim()) {
+      setNapakaStudent("Številka indeksa je obvezna");
+      return;
+    }
+    setShranjujemStudent(true);
+    const res = await fetch("/api/profil/student", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(studentForm),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setStudentPodatki({ ...studentForm });
+      setUrejanjeStudentPodatkov(false);
+    } else {
+      setNapakaStudent(data.error || "Napaka pri shranjevanju");
+    }
+    setShranjujemStudent(false);
+  };
+
+  const openStudentEdit = () => {
+    setStudentForm(studentPodatki ?? { ime: "", priimek: "", indeks: "", fakulteta: "UL", iban: "" });
+    setNapakaStudent("");
+    setUrejanjeStudentPodatkov(true);
+  };
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -156,6 +209,7 @@ export default function ProfilPage() {
   if (!session || !profil) return null;
 
   const isIzvajalec = profil.vloga === "izvajalec";
+  const isStudent = profil.vloga === "student";
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
@@ -180,14 +234,14 @@ export default function ProfilPage() {
               <div
                 className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shrink-0 border"
                 style={
-                  isIzvajalec
+                  isIzvajalec || isStudent
                     ? { background: "rgba(34,197,94,0.10)", borderColor: "rgba(34,197,94,0.20)" }
                     : { background: "rgba(249,115,22,0.10)", borderColor: "rgba(249,115,22,0.20)" }
                 }
               >
                 <span
                   className="text-xl sm:text-2xl font-bold"
-                  style={{ color: isIzvajalec ? "#22C55E" : "#F97316" }}
+                  style={{ color: isIzvajalec || isStudent ? "#22C55E" : "#F97316" }}
                 >
                   {profil.ime.charAt(0).toUpperCase()}
                 </span>
@@ -200,12 +254,12 @@ export default function ProfilPage() {
             <span
               className="text-xs px-3 py-1.5 rounded-full font-medium border shrink-0"
               style={
-                isIzvajalec
+                isIzvajalec || isStudent
                   ? { background: "rgba(34,197,94,0.10)", color: "#22C55E", borderColor: "rgba(34,197,94,0.20)" }
                   : { background: "rgba(249,115,22,0.10)", color: "#F97316", borderColor: "rgba(249,115,22,0.20)" }
               }
             >
-              {isIzvajalec ? "Izvajalec s.p." : "Naročnik"}
+              {isIzvajalec ? "Izvajalec s.p." : isStudent ? "Izvajalec (študent)" : "Naročnik"}
             </span>
           </div>
 
@@ -305,6 +359,60 @@ export default function ProfilPage() {
                   <p className="text-gray-600 text-sm mb-4">Podatki s.p. niso vnešeni</p>
                   <button
                     onClick={openSpEdit}
+                    className="border border-green-500/20 text-green-400 px-5 py-2 rounded-xl text-sm font-medium hover:bg-green-500/5 hover:border-green-500/30 transition-all duration-150"
+                  >
+                    Dodaj podatke
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Student section */}
+        {isStudent && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">Podatki študenta</span>
+              <span className="text-gray-700 text-xs">— za izplačilo prek študentskega servisa</span>
+            </div>
+            <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 hover:border-white/8 transition-all duration-200">
+              {studentPodatki ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4 mb-5">
+                    <div>
+                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Ime</p>
+                      <p className="text-white text-sm font-medium">{studentPodatki.ime}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Priimek</p>
+                      <p className="text-white text-sm font-medium">{studentPodatki.priimek}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Indeks</p>
+                      <p className="text-white text-sm font-mono">{studentPodatki.indeks}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Fakulteta</p>
+                      <p className="text-white text-sm">{studentPodatki.fakulteta}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">IBAN</p>
+                      <p className="text-white text-sm font-mono">{studentPodatki.iban}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={openStudentEdit}
+                    className="w-full border border-green-500/20 text-green-400 py-2.5 rounded-xl text-sm font-medium hover:bg-green-500/5 hover:border-green-500/30 transition-all duration-150"
+                  >
+                    Uredi podatke
+                  </button>
+                </>
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-gray-600 text-sm mb-4">Podatki niso vnešeni</p>
+                  <button
+                    onClick={openStudentEdit}
                     className="border border-green-500/20 text-green-400 px-5 py-2 rounded-xl text-sm font-medium hover:bg-green-500/5 hover:border-green-500/30 transition-all duration-150"
                   >
                     Dodaj podatke
@@ -436,6 +544,89 @@ export default function ProfilPage() {
                   className="flex-1 bg-green-500 text-white py-3 rounded-xl font-semibold hover:bg-green-600 transition-all duration-150 disabled:opacity-50 text-sm"
                 >
                   {shranjujemSp ? "Shranjujem..." : "Shrani"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit student modal */}
+      {urejanjeStudentPodatkov && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-[#111111] border border-white/10 rounded-2xl w-full max-w-md p-8 my-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <span className="text-green-400">🎓</span> Uredi podatke študenta
+            </h2>
+            {napakaStudent && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-4">
+                {napakaStudent}
+              </div>
+            )}
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Ime</label>
+                  <input
+                    className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all w-full"
+                    placeholder="Ana"
+                    value={studentForm.ime}
+                    onChange={(e) => setStudentForm({ ...studentForm, ime: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Priimek</label>
+                  <input
+                    className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all w-full"
+                    placeholder="Novak"
+                    value={studentForm.priimek}
+                    onChange={(e) => setStudentForm({ ...studentForm, priimek: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Številka indeksa</label>
+                <input
+                  className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all w-full"
+                  placeholder="63210001"
+                  value={studentForm.indeks}
+                  onChange={(e) => setStudentForm({ ...studentForm, indeks: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Fakulteta</label>
+                <select
+                  className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 transition-all w-full appearance-none cursor-pointer"
+                  value={studentForm.fakulteta}
+                  onChange={(e) => setStudentForm({ ...studentForm, fakulteta: e.target.value })}
+                >
+                  {FAKULTETE.map((f) => (
+                    <option key={f} value={f} className="bg-[#1a1a1a]">{f}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 uppercase tracking-wider mb-2 block">IBAN</label>
+                <input
+                  className="bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all w-full font-mono"
+                  placeholder="SI56 0000 0000 0000 000"
+                  value={studentForm.iban}
+                  onChange={(e) => setStudentForm({ ...studentForm, iban: e.target.value })}
+                />
+              </div>
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={() => setUrejanjeStudentPodatkov(false)}
+                  className="flex-1 border border-white/10 text-gray-400 py-3 rounded-xl font-medium hover:bg-white/5 transition-all duration-150 text-sm"
+                >
+                  Prekliči
+                </button>
+                <button
+                  onClick={shraniStudentPodatke}
+                  disabled={shranjujemStudent}
+                  className="flex-1 bg-green-500 text-white py-3 rounded-xl font-semibold hover:bg-green-600 transition-all duration-150 disabled:opacity-50 text-sm"
+                >
+                  {shranjujemStudent ? "Shranjujem..." : "Shrani"}
                 </button>
               </div>
             </div>
