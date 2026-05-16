@@ -29,6 +29,13 @@ export async function GET(req: NextRequest) {
     const tab = req.nextUrl.searchParams.get("tab"); // "sprejete" | "opravljene" | null
 
     if (pogled === "narocnik") {
+      if (tab === "objavljene") {
+        const { rows } = await pool.query(
+          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status = 'odprta' ORDER BY "createdAt" DESC`,
+          [userId]
+        );
+        return NextResponse.json(rows);
+      }
       if (tab === "sprejete") {
         const { rows } = await pool.query(
           `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status IN ('sprejeta', 'v teku', 'plačano') ORDER BY "createdAt" DESC`,

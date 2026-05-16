@@ -19,7 +19,7 @@ type Naloga = {
   narocnik?: { ime: string };
 };
 
-type Tab = "sprejete" | "opravljene";
+type Tab = "objavljene" | "sprejete" | "opravljene";
 type OcenjevanjeState = { nalogaId: string; naslov: string } | null;
 
 const KATEGORIJE = ["Hišna opravila", "Prevoz", "IT pomoč", "Pouk", "Vrtnarjenje", "Drugo"];
@@ -38,7 +38,7 @@ export default function MojeNalogePage() {
   const router = useRouter();
   const { mode } = useMode();
 
-  const [tab, setTab] = useState<Tab>("sprejete");
+  const [tab, setTab] = useState<Tab>("objavljene");
   const [naloge, setNaloge] = useState<Naloga[]>([]);
   const [loading, setLoading] = useState(true);
   const [obvestila, setObvestila] = useState<{ id: string; prebrano: boolean }[]>([]);
@@ -69,6 +69,10 @@ export default function MojeNalogePage() {
         .then((data) => { if (Array.isArray(data)) setObvestila(data); });
     }
   }, [status]);
+
+  useEffect(() => {
+    setTab(mode === "narocnik" ? "objavljene" : "sprejete");
+  }, [mode]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -194,7 +198,7 @@ export default function MojeNalogePage() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-7 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-1 w-fit">
-          {(["sprejete", "opravljene"] as Tab[]).map((t) => (
+          {(isNarocnik ? (["objavljene", "sprejete"] as Tab[]) : (["sprejete", "opravljene"] as Tab[])).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -204,7 +208,7 @@ export default function MojeNalogePage() {
                   : "text-[#525252] hover:text-[#A3A3A3]"
               }`}
             >
-              {t === "sprejete" ? (isNarocnik ? "Sprejete" : "Neopravljene") : "Opravljene"}
+              {t === "objavljene" ? "Objavljene" : t === "sprejete" ? (isNarocnik ? "Sprejete" : "Neopravljene") : "Opravljene"}
             </button>
           ))}
         </div>
@@ -215,12 +219,14 @@ export default function MojeNalogePage() {
         ) : naloge.length === 0 ? (
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-16 text-center">
             <p className="text-[#525252] mb-5 text-sm">
-              {tab === "sprejete"
+              {tab === "objavljene"
+                ? "Nimate objavljenih nalog."
+                : tab === "sprejete"
                 ? isNarocnik ? "Nimate sprejetih nalog." : "Nimate neopravljenih nalog."
                 : "Nimate opravljenih nalog."
               }
             </p>
-            {tab === "sprejete" && isNarocnik && (
+            {(tab === "objavljene" || tab === "sprejete") && isNarocnik && (
               <button
                 onClick={() => setModal(true)}
                 className={`${accentBg} ${accentHover} text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-150 text-sm shadow-lg ${accentShadow}`}

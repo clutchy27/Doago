@@ -4,6 +4,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
 
+type NalogaOpravljena = {
+  id: string;
+  naslov: string;
+  cena: number;
+  kategorija: string;
+  lokacija: string;
+  status: string;
+  createdAt: string;
+  narocnik?: { ime: string };
+};
+
 type Profil = {
   ime: string;
   email: string;
@@ -66,6 +77,9 @@ export default function ProfilPage() {
   const [shranjujem, setShranjujem] = useState(false);
   const [napaka, setNapaka] = useState("");
 
+  const [opravljeneNarocnik, setOpravljeneNarocnik] = useState<NalogaOpravljena[]>([]);
+  const [opravljeneIzvajalec, setOpravljeneIzvajalec] = useState<NalogaOpravljena[]>([]);
+
   const [urejanjeSpPodatkov, setUrejanjeSpPodatkov] = useState(false);
   const [spForm, setSpForm] = useState<SpPodatki>({ ime: "", priimek: "", davcnaStevilka: "", iban: "", naslov: "" });
   const [shranjujemSp, setShranjujemSp] = useState(false);
@@ -91,6 +105,14 @@ export default function ProfilPage() {
           }
           setLoading(false);
         });
+
+      fetch("/api/naloge?pogled=narocnik&tab=opravljene")
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setOpravljeneNarocnik(data); });
+
+      fetch("/api/naloge?pogled=izvajalec&tab=opravljene")
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setOpravljeneIzvajalec(data); });
     }
   }, [status]);
 
@@ -264,6 +286,48 @@ export default function ProfilPage() {
             </div>
           </div>
         </div>
+
+        {/* Opravljene naloge */}
+        {(opravljeneNarocnik.length > 0 || opravljeneIzvajalec.length > 0) && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">Opravljene naloge</span>
+              <span className="text-gray-700 text-xs">— zaključene naloge</span>
+            </div>
+            {opravljeneNarocnik.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs text-gray-600 uppercase tracking-wider mb-2 px-1">Kot naročnik</p>
+                <div className="flex flex-col gap-2">
+                  {opravljeneNarocnik.map((n) => (
+                    <div key={n.id} className="bg-[#111111] border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between hover:border-white/8 transition-all duration-200">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white text-sm font-medium truncate">{n.naslov}</p>
+                        <p className="text-gray-600 text-xs mt-0.5">{n.kategorija} · {n.lokacija}</p>
+                      </div>
+                      <span className="text-orange-500 font-bold text-sm ml-4 shrink-0">{n.cena} €</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {opravljeneIzvajalec.length > 0 && (
+              <div>
+                <p className="text-xs text-gray-600 uppercase tracking-wider mb-2 px-1">Kot izvajalec</p>
+                <div className="flex flex-col gap-2">
+                  {opravljeneIzvajalec.map((n) => (
+                    <div key={n.id} className="bg-[#111111] border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between hover:border-white/8 transition-all duration-200">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white text-sm font-medium truncate">{n.naslov}</p>
+                        <p className="text-gray-600 text-xs mt-0.5">{n.kategorija} · {n.lokacija}{n.narocnik ? ` · ${n.narocnik.ime}` : ""}</p>
+                      </div>
+                      <span className="text-green-500 font-bold text-sm ml-4 shrink-0">{n.cena} €</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* S.p. section */}
         {isIzvajalec && (
