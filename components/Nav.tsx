@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useMode } from "@/context/ModeContext";
 
 export function Nav({ badge, current }: { badge?: number; current?: string }) {
@@ -9,6 +10,8 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { mode, setMode } = useMode();
   const { data: session } = useSession();
+  const pathname = usePathname();
+  const hideToggle = pathname === "/naloge/vse";
   const userName = (session?.user as { name?: string } | undefined)?.name;
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -36,28 +39,30 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
         </Link>
 
         {/* Mode toggle — center */}
-        <div className="flex bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-1 gap-1">
-          <button
-            onClick={() => setMode("narocnik")}
-            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
-              mode === "narocnik"
-                ? "bg-[#F97316] text-white shadow-md shadow-orange-500/25"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            Naročnik
-          </button>
-          <button
-            onClick={() => setMode("izvajalec")}
-            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
-              mode === "izvajalec"
-                ? "bg-[#22C55E] text-white shadow-md shadow-green-500/25"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            Izvajalec
-          </button>
-        </div>
+        {!hideToggle && (
+          <div className="flex bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-1 gap-1">
+            <button
+              onClick={() => setMode("narocnik")}
+              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                mode === "narocnik"
+                  ? "bg-[#F97316] text-white shadow-md shadow-orange-500/25"
+                  : "text-gray-500 hover:text-gray-300"
+              }`}
+            >
+              Naročnik
+            </button>
+            <button
+              onClick={() => setMode("izvajalec")}
+              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                mode === "izvajalec"
+                  ? "bg-[#22C55E] text-white shadow-md shadow-green-500/25"
+                  : "text-gray-500 hover:text-gray-300"
+              }`}
+            >
+              Izvajalec
+            </button>
+          </div>
+        )}
 
         {/* Right: Moje naloge + user dropdown (desktop) */}
         <div className="hidden sm:flex items-center gap-1 shrink-0">

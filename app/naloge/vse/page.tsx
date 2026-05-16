@@ -24,7 +24,7 @@ const MESTA = ["Vsa mesta", "Ljubljana", "Maribor", "Celje", "Kranj", "Velenje",
 export default function VseNalogePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { mode } = useMode();
+  const { mode, setMode } = useMode();
 
   const [naloge, setNaloge] = useState<Naloga[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +38,10 @@ export default function VseNalogePage() {
   const accentBg = "bg-[#22C55E]";
   const accentHover = "hover:bg-green-600";
   const accentText = "text-[#22C55E]";
+
+  useEffect(() => {
+    setMode("izvajalec");
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/prijava");
