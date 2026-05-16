@@ -204,7 +204,7 @@ export default function MojeNalogePage() {
                   : "text-[#525252] hover:text-[#A3A3A3]"
               }`}
             >
-              {t === "sprejete" ? "Sprejete" : "Opravljene"}
+              {t === "sprejete" ? (isNarocnik ? "Sprejete" : "Neopravljene") : "Opravljene"}
             </button>
           ))}
         </div>
@@ -216,7 +216,7 @@ export default function MojeNalogePage() {
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-16 text-center">
             <p className="text-[#525252] mb-5 text-sm">
               {tab === "sprejete"
-                ? isNarocnik ? "Nimate sprejetih nalog." : "Nimate sprejetih nalog."
+                ? isNarocnik ? "Nimate sprejetih nalog." : "Nimate neopravljenih nalog."
                 : "Nimate opravljenih nalog."
               }
             </p>

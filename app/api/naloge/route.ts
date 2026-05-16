@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
           `SELECT n.*, u.ime AS "narocnikIme"
            FROM "Naloga" n
            JOIN "User" u ON u.id = n."narocnikId"
-           WHERE n."izvajalecId" = $1 AND n.status IN ('sprejeta', 'v teku', 'plačano')
+           WHERE n."izvajalecId" = $1 AND n.status != 'opravljeno'
            ORDER BY n."createdAt" DESC`,
           [userId]
         );
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
           `SELECT n.*, u.ime AS "narocnikIme"
            FROM "Naloga" n
            JOIN "User" u ON u.id = n."narocnikId"
-           WHERE n."izvajalecId" = $1 AND n.status = 'zaprta'
+           WHERE n."izvajalecId" = $1 AND n.status = 'opravljeno'
            ORDER BY n."createdAt" DESC`,
           [userId]
         );
