@@ -221,6 +221,11 @@ export default function ProfilPage() {
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-white">{profil.ime}</h2>
                 <p className="text-gray-500 text-sm mt-0.5">{profil.email}</p>
+                {isGreen && profil.izvajalec.povprecnaOcena !== null && (
+                  <div className="mt-1.5">
+                    <Zvezdice ocena={profil.izvajalec.povprecnaOcena} stevilo={profil.izvajalec.steviloOcen} />
+                  </div>
+                )}
               </div>
             </div>
             <span
@@ -243,60 +248,34 @@ export default function ProfilPage() {
           </button>
         </div>
 
-        {/* Narocnik stats */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 font-medium">Naročnik</span>
-            <span className="text-gray-700 text-xs">— tvoje objavljene naloge</span>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
-              <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Objavljene</p>
-              <p className="text-2xl font-bold text-white">{profil.narocnik.steviloObjavljenih}</p>
+        {/* ── NAROČNIK layout ── */}
+        {!isGreen && (
+          <>
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 font-medium">Statistike</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
+                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Objavljene</p>
+                  <p className="text-2xl font-bold text-white">{profil.narocnik.steviloObjavljenih}</p>
+                </div>
+                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
+                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Zaključene</p>
+                  <p className="text-2xl font-bold text-white">{profil.narocnik.steviloOpravljenih}</p>
+                </div>
+                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
+                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Porabljeno</p>
+                  <p className="text-xl font-bold text-orange-500">{profil.narocnik.skupajPorabljeno.toFixed(0)} €</p>
+                </div>
+              </div>
             </div>
-            <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
-              <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Zaključene</p>
-              <p className="text-2xl font-bold text-white">{profil.narocnik.steviloOpravljenih}</p>
-            </div>
-            <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
-              <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Porabljeno</p>
-              <p className="text-xl font-bold text-orange-500">{profil.narocnik.skupajPorabljeno.toFixed(0)} €</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Izvajalec stats */}
-        <div className={isIzvajalec ? "mb-4" : ""}>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">Izvajalec</span>
-            <span className="text-gray-700 text-xs">— naloge, ki si jih opravil</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
-              <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Opravljene</p>
-              <p className="text-2xl font-bold text-white">{profil.izvajalec.steviloOpravljenih}</p>
-            </div>
-            <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
-              <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Zaslužek</p>
-              <p className="text-xl font-bold text-orange-500">{profil.izvajalec.skupniZasluzek.toFixed(0)} €</p>
-            </div>
-            <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 col-span-2 hover:border-white/8 transition-all duration-200">
-              <p className="text-gray-600 text-xs uppercase tracking-wider mb-2.5">Povprečna ocena</p>
-              <Zvezdice ocena={profil.izvajalec.povprecnaOcena} stevilo={profil.izvajalec.steviloOcen} />
-            </div>
-          </div>
-        </div>
-
-        {/* Opravljene naloge */}
-        {(opravljeneNarocnik.length > 0 || opravljeneIzvajalec.length > 0) && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">Opravljene naloge</span>
-              <span className="text-gray-700 text-xs">— zaključene naloge</span>
-            </div>
             {opravljeneNarocnik.length > 0 && (
-              <div className="mb-3">
-                <p className="text-xs text-gray-600 uppercase tracking-wider mb-2 px-1">Kot naročnik</p>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 font-medium">Opravljene naloge</span>
+                </div>
                 <div className="flex flex-col gap-2">
                   {opravljeneNarocnik.map((n) => (
                     <div key={n.id} className="bg-[#111111] border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between hover:border-white/8 transition-all duration-200">
@@ -310,9 +289,93 @@ export default function ProfilPage() {
                 </div>
               </div>
             )}
+          </>
+        )}
+
+        {/* ── IZVAJALEC layout (s.p. + študent) ── */}
+        {isGreen && (
+          <>
+            {/* S.p. podatki — only for s.p. izvajalec */}
+            {isIzvajalec && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">S.p. podatki</span>
+                  <span className="text-gray-700 text-xs">— za izstavitev računov</span>
+                </div>
+                <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 hover:border-white/8 transition-all duration-200">
+                  {spPodatki ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-4 mb-5">
+                        <div>
+                          <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Ime</p>
+                          <p className="text-white text-sm font-medium">{spPodatki.ime}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Priimek</p>
+                          <p className="text-white text-sm font-medium">{spPodatki.priimek}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Davčna številka</p>
+                          <p className="text-white text-sm font-mono">{spPodatki.davcnaStevilka}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">IBAN</p>
+                          <p className="text-white text-sm font-mono">{spPodatki.iban}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Naslov</p>
+                          <p className="text-white text-sm">{spPodatki.naslov}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={openSpEdit}
+                        className="w-full border border-green-500/20 text-green-400 py-2.5 rounded-xl text-sm font-medium hover:bg-green-500/5 hover:border-green-500/30 transition-all duration-150"
+                      >
+                        Uredi s.p. podatke
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-center py-2">
+                      <p className="text-gray-600 text-sm mb-4">Podatki s.p. niso vnešeni</p>
+                      <button
+                        onClick={openSpEdit}
+                        className="border border-green-500/20 text-green-400 px-5 py-2 rounded-xl text-sm font-medium hover:bg-green-500/5 hover:border-green-500/30 transition-all duration-150"
+                      >
+                        Dodaj podatke
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Izvajalec stats */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">Statistike</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
+                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Opravljene</p>
+                  <p className="text-2xl font-bold text-white">{profil.izvajalec.steviloOpravljenih}</p>
+                </div>
+                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
+                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Skupni zaslužek</p>
+                  <p className="text-xl font-bold text-green-500">{profil.izvajalec.skupniZasluzek.toFixed(0)} €</p>
+                </div>
+                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 col-span-2 hover:border-white/8 transition-all duration-200">
+                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-2.5">Povprečna ocena</p>
+                  <Zvezdice ocena={profil.izvajalec.povprecnaOcena} stevilo={profil.izvajalec.steviloOcen} />
+                </div>
+              </div>
+            </div>
+
+            {/* Opravljene naloge (izvajalec) */}
             {opravljeneIzvajalec.length > 0 && (
-              <div>
-                <p className="text-xs text-gray-600 uppercase tracking-wider mb-2 px-1">Kot izvajalec</p>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">Opravljene naloge</span>
+                </div>
                 <div className="flex flex-col gap-2">
                   {opravljeneIzvajalec.map((n) => (
                     <div key={n.id} className="bg-[#111111] border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between hover:border-white/8 transition-all duration-200">
@@ -326,61 +389,7 @@ export default function ProfilPage() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {/* S.p. section */}
-        {isIzvajalec && (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">S.p. podatki</span>
-              <span className="text-gray-700 text-xs">— za izstavitev računov</span>
-            </div>
-            <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 hover:border-white/8 transition-all duration-200">
-              {spPodatki ? (
-                <>
-                  <div className="grid grid-cols-2 gap-4 mb-5">
-                    <div>
-                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Ime</p>
-                      <p className="text-white text-sm font-medium">{spPodatki.ime}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Priimek</p>
-                      <p className="text-white text-sm font-medium">{spPodatki.priimek}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Davčna številka</p>
-                      <p className="text-white text-sm font-mono">{spPodatki.davcnaStevilka}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">IBAN</p>
-                      <p className="text-white text-sm font-mono">{spPodatki.iban}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-gray-600 text-xs uppercase tracking-wider mb-1">Naslov</p>
-                      <p className="text-white text-sm">{spPodatki.naslov}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={openSpEdit}
-                    className="w-full border border-green-500/20 text-green-400 py-2.5 rounded-xl text-sm font-medium hover:bg-green-500/5 hover:border-green-500/30 transition-all duration-150"
-                  >
-                    Uredi s.p. podatke
-                  </button>
-                </>
-              ) : (
-                <div className="text-center py-2">
-                  <p className="text-gray-600 text-sm mb-4">Podatki s.p. niso vnešeni</p>
-                  <button
-                    onClick={openSpEdit}
-                    className="border border-green-500/20 text-green-400 px-5 py-2 rounded-xl text-sm font-medium hover:bg-green-500/5 hover:border-green-500/30 transition-all duration-150"
-                  >
-                    Dodaj podatke
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          </>
         )}
       </main>
 
@@ -434,9 +443,7 @@ export default function ProfilPage() {
       {urejanjeSpPodatkov && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4 backdrop-blur-sm overflow-y-auto">
           <div className="bg-[#111111] border border-white/10 rounded-2xl w-full max-w-md p-8 my-8">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <span className="text-green-400">🛠</span> Uredi s.p. podatke
-            </h2>
+            <h2 className="text-xl font-bold text-white mb-6">Uredi s.p. podatke</h2>
             {napakaSp && (
               <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-4">
                 {napakaSp}

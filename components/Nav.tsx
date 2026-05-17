@@ -11,9 +11,15 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
   const { mode, setMode } = useMode();
   const { data: session } = useSession();
   const pathname = usePathname();
-  const hideToggle = pathname === "/naloge/vse";
+  const userVloga = (session?.user as { vloga?: string } | undefined)?.vloga;
+  const isSpUser = userVloga === "izvajalec";
+  const hideToggle = pathname === "/naloge/vse" || isSpUser;
   const userName = (session?.user as { name?: string } | undefined)?.name;
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isSpUser && mode !== "izvajalec") setMode("izvajalec");
+  }, [isSpUser, mode, setMode]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
