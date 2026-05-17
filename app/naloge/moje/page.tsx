@@ -15,6 +15,7 @@ type Naloga = {
   lokacija: string;
   status: string;
   nujna: boolean;
+  profesionalna: boolean;
   createdAt: string;
   narocnik?: { ime: string };
 };
@@ -45,7 +46,7 @@ export default function MojeNalogePage() {
 
   // Create task modal
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "", nujna: false });
+  const [form, setForm] = useState({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "", nujna: false, profesionalna: false });
   const [napaka, setNapaka] = useState("");
   const [posiljam, setPosiljam] = useState(false);
 
@@ -96,12 +97,13 @@ export default function MojeNalogePage() {
         kategorija: form.kategorija,
         lokacija: form.ulica ? `${form.mesto}, ${form.ulica}` : form.mesto,
         nujna: form.nujna,
+        profesionalna: form.profesionalna,
       }),
     });
     const data = await res.json();
     if (res.ok) {
       setModal(false);
-      setForm({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "", nujna: false });
+      setForm({ naslov: "", opis: "", cena: "", kategorija: KATEGORIJE[0], mesto: MESTA[0], ulica: "", nujna: false, profesionalna: false });
       setLoading(true);
       fetch(`/api/naloge?pogled=${mode}&tab=${tab}`)
         .then((r) => r.json())
@@ -256,6 +258,11 @@ export default function MojeNalogePage() {
                     {n.nujna && (
                       <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-red-500/15 text-red-400 border border-red-500/30 uppercase tracking-wide">
                         🔴 Nujno
+                      </span>
+                    )}
+                    {n.profesionalna && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wide">
+                        ⭐ PRO
                       </span>
                     )}
                     <h2 className="font-semibold text-white">{n.naslov}</h2>
@@ -418,6 +425,28 @@ export default function MojeNalogePage() {
                 </div>
                 <div className={`w-9 h-5 rounded-full transition-colors duration-150 flex items-center px-0.5 shrink-0 ${form.nujna ? "bg-red-500" : "bg-[#333333]"}`}>
                   <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-150 ${form.nujna ? "translate-x-4" : "translate-x-0"}`} />
+                </div>
+              </button>
+
+              {/* Profesionalna toggle */}
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, profesionalna: !form.profesionalna })}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-150 text-left ${
+                  form.profesionalna
+                    ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
+                    : "bg-[#242424] border-[#333333] text-[#525252] hover:border-[#444444] hover:text-[#A3A3A3]"
+                }`}
+              >
+                <span className="text-base">⭐</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">Profesionalna naloga</p>
+                  {form.profesionalna && (
+                    <p className="text-xs mt-0.5 text-blue-400/70">Naloga zahteva strokovno znanje ali izkušnje</p>
+                  )}
+                </div>
+                <div className={`w-9 h-5 rounded-full transition-colors duration-150 flex items-center px-0.5 shrink-0 ${form.profesionalna ? "bg-blue-500" : "bg-[#333333]"}`}>
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-150 ${form.profesionalna ? "translate-x-4" : "translate-x-0"}`} />
                 </div>
               </button>
 

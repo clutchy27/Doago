@@ -14,6 +14,7 @@ type Naloga = {
   lokacija: string;
   status: string;
   nujna: boolean;
+  profesionalna: boolean;
   createdAt: string;
   narocnik?: { ime: string };
 };
@@ -31,6 +32,7 @@ export default function VseNalogePage() {
   const [filterKat, setFilterKat] = useState("Vse");
   const [filterMesto, setFilterMesto] = useState("Vsa mesta");
   const [filterNujne, setFilterNujne] = useState(false);
+  const [filterPro, setFilterPro] = useState(false);
   const [sprejemam, setSprejemam] = useState<string | null>(null);
   const [sporocilo, setSporocilo] = useState<string | null>(null);
 
@@ -74,7 +76,8 @@ export default function VseNalogePage() {
     const katOk = filterKat === "Vse" || n.kategorija === filterKat;
     const mestoOk = filterMesto === "Vsa mesta" || n.lokacija.startsWith(filterMesto);
     const nujnaOk = !filterNujne || n.nujna;
-    return katOk && mestoOk && nujnaOk;
+    const proOk = !filterPro || n.profesionalna;
+    return katOk && mestoOk && nujnaOk && proOk;
   });
 
   if (status === "loading") {
@@ -126,6 +129,18 @@ export default function VseNalogePage() {
               }`}
             >
               🔴 Nujne naloge
+            </button>
+
+            {/* Profesionalne naloge toggle */}
+            <button
+              onClick={() => setFilterPro(!filterPro)}
+              className={`w-full px-4 py-2.5 rounded-full border font-semibold text-sm transition-all duration-150 ${
+                filterPro
+                  ? "bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/25"
+                  : "bg-[#1A1A1A] text-[#525252] border-blue-500/50 hover:border-blue-500/80 hover:text-blue-400"
+              }`}
+            >
+              ⭐ Profesionalne
             </button>
 
             <div className="h-px bg-[#2A2A2A]" />
@@ -194,6 +209,11 @@ export default function VseNalogePage() {
                         {n.nujna && (
                           <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-red-500/15 text-red-400 border border-red-500/30 uppercase tracking-wide whitespace-nowrap">
                             🔴 Nujno
+                          </span>
+                        )}
+                        {n.profesionalna && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wide whitespace-nowrap">
+                            ⭐ PRO
                           </span>
                         )}
                         <h2 className="font-semibold text-white">{n.naslov}</h2>

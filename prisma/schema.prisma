@@ -46,8 +46,9 @@ model Naloga {
   kategorija  String
   lokacija    String
   status      String      @default("odprta")
-  nujna       Boolean     @default(false)
-  createdAt   DateTime    @default(now())
+  nujna         Boolean     @default(false)
+  profesionalna Boolean     @default(false)
+  createdAt     DateTime    @default(now())
   narocnik    User        @relation("NarocnikNaloge", fields: [narocnikId], references: [id])
   narocnikId  String
   izvajalec   User?       @relation("IzvajalecNaloge", fields: [izvajalecId], references: [id])
