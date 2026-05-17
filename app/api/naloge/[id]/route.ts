@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { pool } from "@/lib/db";
-import { sendTaskAcceptedEmail } from "@/lib/email";
 
 const initPromise = Promise.all([
   pool.query(`ALTER TABLE "Naloga" ADD COLUMN IF NOT EXISTS "izvajalecId" TEXT REFERENCES "User"(id)`),
@@ -79,7 +78,7 @@ export async function PATCH(
 
     const { rows } = await pool.query(
       `UPDATE "Naloga"
-       SET status = 'sprejeta', "izvajalecId" = $1
+       SET status = 'caka_potrditev', "izvajalecId" = $1
        WHERE id = $2 AND status = 'odprta' AND "narocnikId" != $1
        RETURNING *`,
       [izvajalecId, id]
@@ -91,38 +90,23 @@ export async function PATCH(
 
     const naloga = rows[0];
 
+    const { rows: izvajalecRows } = await pool.query(
+      `SELECT ime FROM "User" WHERE id = $1`,
+      [izvajalecId]
+    );
+    const izvajalecIme = izvajalecRows[0]?.ime ?? "Izvajalec";
+
     // Obvestilo za naročnika
     await pool.query(
       `INSERT INTO "Obvestilo" (id, besedilo, "userId", "nalogaId")
        VALUES ($1, $2, $3, $4)`,
       [
         crypto.randomUUID(),
-        `Vaša naloga "${naloga.naslov}" je bila sprejeta.`,
+        `Izvajalec ${izvajalecIme} želi sprejeti vašo nalogo: "${naloga.naslov}"`,
         naloga.narocnikId,
         naloga.id,
       ]
     );
-
-    // Send email to naročnik (fire-and-forget)
-    pool.query(
-      `SELECT u_narocnik.ime AS narocnik_ime, u_narocnik.email AS narocnik_email,
-              u_izvajalec.ime AS izvajalec_ime
-       FROM "User" u_narocnik
-       JOIN "User" u_izvajalec ON u_izvajalec.id = $1
-       WHERE u_narocnik.id = $2`,
-      [izvajalecId, naloga.narocnikId]
-    ).then(({ rows: u }) => {
-      if (u.length > 0) {
-        sendTaskAcceptedEmail({
-          to: u[0].narocnik_email,
-          ime: u[0].narocnik_ime,
-          naslov: naloga.naslov,
-          kategorija: naloga.kategorija,
-          cena: naloga.cena,
-          izvajalecIme: u[0].izvajalec_ime,
-        });
-      }
-    }).catch(() => {});
 
     return NextResponse.json(naloga);
   } catch (err) {

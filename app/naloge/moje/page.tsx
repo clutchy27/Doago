@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { useMode } from "@/context/ModeContext";
+import IzvajalecApprovalModal, { type ApprovalTask } from "@/components/IzvajalecApprovalModal";
 
 type Naloga = {
   id: string;
@@ -28,6 +29,7 @@ const MESTA = ["Ljubljana", "Maribor", "Celje", "Kranj", "Velenje", "Koper", "No
 
 const statusBarva: Record<string, string> = {
   odprta: "bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/25",
+  caka_potrditev: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
   sprejeta: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   "v teku": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   "plačano": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
@@ -59,6 +61,9 @@ export default function MojeNalogePage() {
   // Payment
   const [placam, setPlacam] = useState<string | null>(null);
 
+  // Approval modal
+  const [approvalTask, setApprovalTask] = useState<ApprovalTask | null>(null);
+
   useEffect(() => {
     if (status === "unauthenticated") router.push("/prijava");
   }, [status, router]);
@@ -82,6 +87,40 @@ export default function MojeNalogePage() {
       .then((r) => r.json())
       .then((data) => { setNaloge(Array.isArray(data) ? data : []); setLoading(false); });
   }, [status, mode, tab]);
+
+  // Poll for pending izvajalec approvals (narocnik only)
+  useEffect(() => {
+    if (status !== "authenticated" || mode !== "narocnik") return;
+    let cancelled = false;
+    const poll = () => {
+      fetch("/api/naloge?pogled=narocnik&tab=caka_potrditev")
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return;
+          if (Array.isArray(data) && data.length > 0) {
+            setApprovalTask((prev) => {
+              if (prev) return prev;
+              const first = data[0];
+              return {
+                nalogaId: first.id,
+                naslovNaloge: first.naslov,
+                izvajalecIme: first.izvajalecIme ?? "Izvajalec",
+                izvajalecVloga: first.izvajalecVloga ?? "",
+                izvajalecOpis: first.izvajalecOpis ?? null,
+                izvajalecPovprecnaOcena: first.izvajalecPovprecnaOcena ?? null,
+                izvajalecSteviloOpravljenih: parseInt(first.izvajalecSteviloOpravljenih) || 0,
+              };
+            });
+          } else {
+            setApprovalTask(null);
+          }
+        })
+        .catch(() => {});
+    };
+    poll();
+    const interval = setInterval(poll, 10000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [status, mode]);
 
   const objavi = async () => {
     if (!form.naslov || !form.opis || !form.cena) { setNapaka("Vsa polja so obvezna"); return; }
@@ -143,6 +182,14 @@ export default function MojeNalogePage() {
       setOcenjevanje(null);
     }
     setOddajam(false);
+  };
+
+  const handleApprovalDone = () => {
+    setApprovalTask(null);
+    setLoading(true);
+    fetch(`/api/naloge?pogled=${mode}&tab=${tab}`)
+      .then((r) => r.json())
+      .then((data) => { setNaloge(Array.isArray(data) ? data : []); setLoading(false); });
   };
 
   if (status === "loading") {
@@ -271,6 +318,9 @@ export default function MojeNalogePage() {
                     </span>
                   </div>
                   <p className="text-[#A3A3A3] text-sm mb-3 line-clamp-2 leading-relaxed">{n.opis}</p>
+                  {!isNarocnik && n.status === "caka_potrditev" && (
+                    <p className="text-amber-400 text-xs mb-2">⏳ Čakaš na potrditev naročnika...</p>
+                  )}
                   <div className="flex gap-2 text-xs text-[#525252] flex-wrap items-center">
                     <span className="bg-[#242424] px-2.5 py-1 rounded-full">{n.kategorija}</span>
                     {n.lokacija && <span>📍 {n.lokacija}</span>}
@@ -280,6 +330,12 @@ export default function MojeNalogePage() {
 
                 <div className="flex flex-col items-end gap-2.5 shrink-0">
                   <span className={`${accentText} font-bold text-xl whitespace-nowrap`}>{n.cena} €</span>
+
+                  {isNarocnik && n.status === "caka_potrditev" && (
+                    <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1.5 rounded-xl whitespace-nowrap">
+                      ⏳ Čaka potrditev
+                    </span>
+                  )}
 
                   {isNarocnik && n.status === "sprejeta" && (
                     <button
@@ -308,6 +364,15 @@ export default function MojeNalogePage() {
           </div>
         )}
       </main>
+
+      {/* Izvajalec approval modal */}
+      {approvalTask && (
+        <IzvajalecApprovalModal
+          naloga={approvalTask}
+          isNarocnik={isNarocnik}
+          onZakljuceno={handleApprovalDone}
+        />
+      )}
 
       {/* Rating modal */}
       {ocenjevanje && (

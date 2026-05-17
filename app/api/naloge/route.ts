@@ -3,21 +3,34 @@ import { getToken } from "next-auth/jwt";
 import { pool } from "@/lib/db";
 import { sendTaskPublishedEmail } from "@/lib/email";
 
-const initPromise = pool.query(`
-  CREATE TABLE IF NOT EXISTS "Naloga" (
-    id          TEXT PRIMARY KEY,
-    naslov      TEXT NOT NULL,
-    opis        TEXT NOT NULL,
-    cena        DOUBLE PRECISION NOT NULL,
-    kategorija  TEXT NOT NULL,
-    lokacija    TEXT NOT NULL DEFAULT '',
-    status      TEXT NOT NULL DEFAULT 'odprta',
-    nujna         BOOLEAN NOT NULL DEFAULT false,
-    profesionalna BOOLEAN NOT NULL DEFAULT false,
-    "createdAt"   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "narocnikId" TEXT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE
-  )
-`).catch((err) => console.error("[Naloga] init error:", err));
+const initPromise = Promise.all([
+  pool.query(`
+    CREATE TABLE IF NOT EXISTS "Naloga" (
+      id          TEXT PRIMARY KEY,
+      naslov      TEXT NOT NULL,
+      opis        TEXT NOT NULL,
+      cena        DOUBLE PRECISION NOT NULL,
+      kategorija  TEXT NOT NULL,
+      lokacija    TEXT NOT NULL DEFAULT '',
+      status      TEXT NOT NULL DEFAULT 'odprta',
+      nujna         BOOLEAN NOT NULL DEFAULT false,
+      profesionalna BOOLEAN NOT NULL DEFAULT false,
+      "createdAt"   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      "narocnikId" TEXT NOT NULL REFERENCES "User"(id) ON DELETE CASCADE
+    )
+  `),
+  pool.query(`
+    CREATE TABLE IF NOT EXISTS "Rating" (
+      id             TEXT PRIMARY KEY,
+      zvezde         INTEGER NOT NULL,
+      komentar       TEXT,
+      "nalogaId"     TEXT NOT NULL,
+      "narocnikId"   TEXT NOT NULL,
+      "izvajalecId"  TEXT NOT NULL,
+      "createdAt"    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `),
+]).catch((err) => console.error("[Naloga] init error:", err));
 
 export async function GET(req: NextRequest) {
   await initPromise;
@@ -32,7 +45,24 @@ export async function GET(req: NextRequest) {
     if (pogled === "narocnik") {
       if (tab === "objavljene") {
         const { rows } = await pool.query(
-          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status = 'odprta' ORDER BY "createdAt" DESC`,
+          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status IN ('odprta', 'caka_potrditev') ORDER BY "createdAt" DESC`,
+          [userId]
+        );
+        return NextResponse.json(rows);
+      }
+      if (tab === "caka_potrditev") {
+        const { rows } = await pool.query(
+          `SELECT n.*,
+                  u_i.ime AS "izvajalecIme",
+                  u_i.vloga AS "izvajalecVloga",
+                  sp.opis AS "izvajalecOpis",
+                  (SELECT AVG(zvezde)::FLOAT FROM "Rating" WHERE "izvajalecId" = u_i.id) AS "izvajalecPovprecnaOcena",
+                  (SELECT COUNT(*)::INT FROM "Naloga" WHERE "izvajalecId" = u_i.id AND status = 'zaprta') AS "izvajalecSteviloOpravljenih"
+           FROM "Naloga" n
+           JOIN "User" u_i ON u_i.id = n."izvajalecId"
+           LEFT JOIN "SpPodatki" sp ON sp."userId" = u_i.id
+           WHERE n."narocnikId" = $1 AND n.status = 'caka_potrditev'
+           ORDER BY n."createdAt" DESC`,
           [userId]
         );
         return NextResponse.json(rows);

@@ -65,8 +65,8 @@ export default function VseNalogePage() {
     const data = await res.json();
     if (res.ok) {
       setNaloge((prev) => prev.filter((n) => n.id !== id));
-      setSporocilo(`Naloga "${naslov}" uspešno sprejeta.`);
-      setTimeout(() => setSporocilo(null), 4000);
+      setSporocilo(`Prijava poslana! Čakate na potrditev naročnika za nalogo "${naslov}".`);
+      setTimeout(() => setSporocilo(null), 6000);
     } else {
       setSporocilo(data.error || "Napaka pri sprejemu");
     }
