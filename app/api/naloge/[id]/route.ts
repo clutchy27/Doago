@@ -65,6 +65,18 @@ export async function PATCH(
     const { id } = await params;
     const izvajalecId = (token.sub ?? token.id) as string;
 
+    // Enforce SP-only restriction for profesionalna tasks
+    const { rows: nalogaInfo } = await pool.query(
+      `SELECT profesionalna FROM "Naloga" WHERE id = $1`,
+      [id]
+    );
+    if (nalogaInfo.length > 0 && nalogaInfo[0].profesionalna && token.vloga !== "sp") {
+      return NextResponse.json(
+        { error: "Profesionalne naloge lahko sprejemajo samo izvajalci s s.p." },
+        { status: 403 }
+      );
+    }
+
     const { rows } = await pool.query(
       `UPDATE "Naloga"
        SET status = 'sprejeta', "izvajalecId" = $1

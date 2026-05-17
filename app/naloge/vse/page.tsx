@@ -37,6 +37,7 @@ export default function VseNalogePage() {
   const [sporocilo, setSporocilo] = useState<string | null>(null);
 
   const isNarocnik = mode === "narocnik";
+  const isSP = (session?.user as any)?.vloga === "sp";
   const accentBg = "bg-[#22C55E]";
   const accentHover = "hover:bg-green-600";
   const accentText = "text-[#22C55E]";
@@ -202,7 +203,7 @@ export default function VseNalogePage() {
                       n.nujna
                         ? "bg-[#1A1A1A] border border-red-500/30 shadow-[0_0_16px_rgba(239,68,68,0.07)] hover:border-red-500/50 hover:shadow-red-500/10"
                         : `bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#22C55E]/20 hover:shadow-green-500/5 ${filterNujne ? "opacity-40" : ""}`
-                    }`}
+                    } ${n.profesionalna && !isSP ? "opacity-60" : ""}`}
                   >
                     <div className="flex-1 min-w-0 mr-4">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -212,9 +213,15 @@ export default function VseNalogePage() {
                           </span>
                         )}
                         {n.profesionalna && (
-                          <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wide whitespace-nowrap">
-                            ⭐ PRO
-                          </span>
+                          isSP ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wide whitespace-nowrap">
+                              ⭐ PRO
+                            </span>
+                          ) : (
+                            <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 uppercase tracking-wide whitespace-nowrap">
+                              🔒 Samo s.p.
+                            </span>
+                          )
                         )}
                         <h2 className="font-semibold text-white">{n.naslov}</h2>
                         <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 whitespace-nowrap">
@@ -230,13 +237,15 @@ export default function VseNalogePage() {
                     <div className="flex flex-col items-end gap-2.5 shrink-0">
                       <span className={`${accentText} font-bold text-xl`}>{n.cena} €</span>
                       {!isNarocnik && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); sprejmi(n.id, n.naslov); }}
-                          disabled={sprejemam === n.id}
-                          className={`text-sm ${accentBg} ${accentHover} text-white px-4 py-1.5 rounded-xl transition-all duration-150 disabled:opacity-50 whitespace-nowrap font-semibold shadow-md hover:shadow-green-500/25`}
-                        >
-                          {sprejemam === n.id ? "Sprejemam..." : "Sprejmi"}
-                        </button>
+                        <span title={n.profesionalna && !isSP ? "Profesionalne naloge lahko sprejemajo samo izvajalci s s.p." : undefined}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); sprejmi(n.id, n.naslov); }}
+                            disabled={sprejemam === n.id || (n.profesionalna && !isSP)}
+                            className={`text-sm ${accentBg} ${accentHover} text-white px-4 py-1.5 rounded-xl transition-all duration-150 disabled:opacity-50 whitespace-nowrap font-semibold shadow-md hover:shadow-green-500/25`}
+                          >
+                            {sprejemam === n.id ? "Sprejemam..." : "Sprejmi"}
+                          </button>
+                        </span>
                       )}
                     </div>
                   </div>
