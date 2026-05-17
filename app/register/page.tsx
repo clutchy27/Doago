@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -51,7 +52,16 @@ export default function Register() {
     });
     const data = await res.json();
     if (res.ok) {
-      router.push("/prijava");
+      if (data.requiresProfileSetup) {
+        const loginRes = await signIn("credentials", {
+          redirect: false,
+          email: form.email,
+          geslo: form.geslo,
+        });
+        router.push(loginRes?.ok ? "/profil/setup" : "/prijava");
+      } else {
+        router.push("/prijava");
+      }
     } else {
       setNapaka(data.error || "Napaka pri registraciji");
       setLoading(false);

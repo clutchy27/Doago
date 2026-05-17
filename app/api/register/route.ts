@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, requiresProfileSetup: vlogaValue === "izvajalec" });
   } catch (err) {
     console.error("Registration error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
     return NextResponse.json({ error: "Napaka na strežniku" }, { status: 500 });

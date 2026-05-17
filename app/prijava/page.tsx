@@ -19,7 +19,9 @@ export default function Prijava() {
       geslo: form.geslo,
     });
     if (res?.ok) {
-      router.push("/dashboard");
+      const check = await fetch("/api/profil/setup-check");
+      const checkData = await check.json();
+      router.push(checkData.needsSetup ? "/profil/setup" : "/dashboard");
     } else {
       setNapaka("Napačen email ali geslo");
       setLoading(false);
