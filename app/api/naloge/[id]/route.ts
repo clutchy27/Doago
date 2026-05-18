@@ -67,7 +67,7 @@ export async function PATCH(
       `SELECT profesionalna FROM "Naloga" WHERE id = $1`,
       [id]
     );
-    if (nalogaInfo.length > 0 && nalogaInfo[0].profesionalna && token.vloga !== "sp") {
+    if (nalogaInfo.length > 0 && nalogaInfo[0].profesionalna && token.vloga !== "izvajalec") {
       return NextResponse.json(
         { error: "Profesionalne naloge lahko sprejemajo samo izvajalci s s.p." },
         { status: 403 }

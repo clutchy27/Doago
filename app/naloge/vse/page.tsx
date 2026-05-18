@@ -37,7 +37,7 @@ export default function VseNalogePage() {
   const [sporocilo, setSporocilo] = useState<string | null>(null);
 
   const isNarocnik = mode === "narocnik";
-  const isSP = (session?.user as any)?.vloga === "sp";
+  const isSP = (session?.user as any)?.vloga === "izvajalec";
   const accentBg = "bg-[#22C55E]";
   const accentHover = "hover:bg-green-600";
   const accentText = "text-[#22C55E]";
