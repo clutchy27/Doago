@@ -33,6 +33,7 @@ const statusBarva: Record<string, string> = {
   sprejeta: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   "plačano": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
   caka_zakljucek: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
+  reklamacija: "bg-red-500/10 text-red-400 border border-red-500/20",
   zaprta: "bg-[#1A1A1A] text-[#525252] border border-[#2A2A2A]",
 };
 
@@ -67,6 +68,12 @@ export default function MojeNalogePage() {
   const [komentarZakljucek, setKomentarZakljucek] = useState("");
   const [oddajamZakljucek, setOddajamZakljucek] = useState(false);
   const [napakaModa, setNapakaModa] = useState("");
+
+  // Reklamacija step inside blocking modal
+  const [reklamacijaKorak, setReklamacijaKorak] = useState(false);
+  const [reklamacijaRazlog, setReklamacijaRazlog] = useState("");
+  const [oddajamReklamacijo, setOddajamReklamacijo] = useState(false);
+  const [napakaReklamacija, setNapakaReklamacija] = useState("");
 
   // Success toast
   const [sporocilo, setSporocilo] = useState<string | null>(null);
@@ -242,6 +249,37 @@ export default function MojeNalogePage() {
     setOddajamZakljucek(false);
   };
 
+  const oddajReklamacijo = async () => {
+    if (!zakljucevanjeTask) return;
+    if (reklamacijaRazlog.trim().length < 20) {
+      setNapakaReklamacija("Razlog mora vsebovati vsaj 20 znakov");
+      return;
+    }
+    setOddajamReklamacijo(true);
+    setNapakaReklamacija("");
+    const res = await fetch(`/api/naloge/${zakljucevanjeTask.nalogaId}/reklamacija`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ razlog: reklamacijaRazlog }),
+    });
+    if (res.ok) {
+      const naslovNaloge = zakljucevanjeTask.naslov;
+      setZakljucevanjeTask(null);
+      setReklamacijaKorak(false);
+      setReklamacijaRazlog("");
+      setSporocilo(`Reklamacija za nalogo "${naslovNaloge}" je bila uspešno vložena.`);
+      setTimeout(() => setSporocilo(null), 6000);
+      setLoading(true);
+      fetch(`/api/naloge?pogled=${mode}&tab=${tab}`)
+        .then((r) => r.json())
+        .then((data) => { setNaloge(Array.isArray(data) ? data : []); setLoading(false); });
+    } else {
+      const data = await res.json();
+      setNapakaReklamacija(data.error || "Napaka pri vložitvi reklamacije");
+    }
+    setOddajamReklamacijo(false);
+  };
+
   const handleApprovalDone = () => {
     setApprovalTask(null);
     setLoading(true);
@@ -382,7 +420,7 @@ export default function MojeNalogePage() {
                     )}
                     <h2 className="font-semibold text-white">{n.naslov}</h2>
                     <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${statusBarva[n.status] ?? "bg-[#1A1A1A] text-[#525252]"}`}>
-                      {n.status === "caka_zakljucek" ? "čaka zaključek" : n.status}
+                      {n.status === "caka_zakljucek" ? "čaka zaključek" : n.status === "reklamacija" ? "V reklamaciji" : n.status}
                     </span>
                   </div>
                   <p className="text-[#A3A3A3] text-sm mb-3 line-clamp-2 leading-relaxed">{n.opis}</p>
@@ -464,93 +502,165 @@ export default function MojeNalogePage() {
           <div className="bg-[#111111] border border-[#222222] rounded-2xl w-full max-w-lg shadow-2xl shadow-black/80 overflow-y-auto max-h-[90vh]">
 
             {/* Top accent bar */}
-            <div className="h-1 w-full rounded-t-2xl bg-gradient-to-r from-orange-500 to-orange-400" />
+            <div className={`h-1 w-full rounded-t-2xl ${reklamacijaKorak ? "bg-gradient-to-r from-red-600 to-red-500" : "bg-gradient-to-r from-orange-500 to-orange-400"}`} />
 
             <div className="p-8 sm:p-10">
-              {/* Icon */}
-              <div className="flex justify-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                  <span className="text-3xl" role="img" aria-label="Opravljeno">✅</span>
-                </div>
-              </div>
+              {reklamacijaKorak ? (
+                <>
+                  {/* Reklamacija confirmation step */}
+                  <div className="flex justify-center mb-6">
+                    <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                      <span className="text-3xl" role="img" aria-label="Reklamacija">⚠️</span>
+                    </div>
+                  </div>
 
-              {/* Badge + title */}
-              <div className="text-center mb-6">
-                <span className="inline-block text-xs px-3 py-1 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 font-semibold mb-3">
-                  Naloga opravljena
-                </span>
-                <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
-                  Potrdi in oceni izvajalca
-                </h2>
-                <p className="text-[#F97316] font-semibold text-base leading-snug">
-                  {zakljucevanjeTask.naslov}
-                </p>
-                <p className="text-[#525252] text-sm mt-3 leading-relaxed">
-                  Izvajalec je zaključil nalogo. Izberite oceno in potrdite — brez tega nalogo ne morete zapreti.
-                </p>
-              </div>
+                  <div className="text-center mb-6">
+                    <span className="inline-block text-xs px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-semibold mb-3">
+                      Reklamacija
+                    </span>
+                    <h2 className="text-xl font-bold text-white tracking-tight mb-2">
+                      Ste prepričani?
+                    </h2>
+                    <p className="text-[#A3A3A3] text-sm leading-relaxed">
+                      S tem sporočite da izvajalec ni opravil naloge.
+                    </p>
+                  </div>
 
-              <div className="h-px bg-[#1E1E1E] mb-7" />
+                  <div className="h-px bg-[#1E1E1E] mb-6" />
 
-              {napakaModa && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-6">
-                  {napakaModa}
-                </div>
-              )}
+                  {napakaReklamacija && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-5">
+                      {napakaReklamacija}
+                    </div>
+                  )}
 
-              {/* Stars */}
-              <div className="mb-7">
-                <p className="text-xs text-[#525252] uppercase tracking-wider mb-4 font-semibold text-center">
-                  Ocena izvajalca
-                  {zvezdiceZakljucek === 0 && <span className="text-orange-500 ml-1">— obvezno</span>}
-                </p>
-                <div className="flex justify-center gap-3">
-                  {[1, 2, 3, 4, 5].map((s) => (
+                  <div className="mb-6">
+                    <p className="text-xs text-[#525252] uppercase tracking-wider mb-2 font-semibold">
+                      Opišite kaj je šlo narobe <span className="text-red-400">— obvezno</span>
+                    </p>
+                    <textarea
+                      className="w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder-[#444444] focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/30 transition-all resize-none"
+                      placeholder="Opišite kaj je šlo narobe (vsaj 20 znakov)"
+                      rows={4}
+                      value={reklamacijaRazlog}
+                      onChange={(e) => { setReklamacijaRazlog(e.target.value); setNapakaReklamacija(""); }}
+                    />
+                    <p className={`text-xs mt-1.5 text-right ${reklamacijaRazlog.trim().length >= 20 ? "text-[#525252]" : "text-red-500/60"}`}>
+                      {reklamacijaRazlog.trim().length}/20 znakov min.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={oddajReklamacijo}
+                    disabled={oddajamReklamacijo || reklamacijaRazlog.trim().length < 20}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl font-bold tracking-wide transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed text-base shadow-lg shadow-red-500/20 hover:-translate-y-0.5 active:translate-y-0 mb-3"
+                  >
+                    {oddajamReklamacijo ? "Vlagam reklamacijo..." : "Potrdi reklamacijo"}
+                  </button>
+
+                  <button
+                    onClick={() => { setReklamacijaKorak(false); setReklamacijaRazlog(""); setNapakaReklamacija(""); }}
+                    className="w-full border border-[#2A2A2A] text-[#A3A3A3] py-3 rounded-xl font-medium hover:bg-[#1A1A1A] hover:text-white transition-all duration-150 text-sm"
+                  >
+                    Nazaj
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Normal rating step */}
+                  <div className="flex justify-center mb-6">
+                    <div className="w-16 h-16 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                      <span className="text-3xl" role="img" aria-label="Opravljeno">✅</span>
+                    </div>
+                  </div>
+
+                  <div className="text-center mb-6">
+                    <span className="inline-block text-xs px-3 py-1 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 font-semibold mb-3">
+                      Naloga opravljena
+                    </span>
+                    <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
+                      Potrdi in oceni izvajalca
+                    </h2>
+                    <p className="text-[#F97316] font-semibold text-base leading-snug">
+                      {zakljucevanjeTask.naslov}
+                    </p>
+                    <p className="text-[#525252] text-sm mt-3 leading-relaxed">
+                      Izvajalec je zaključil nalogo. Izberite oceno in potrdite — brez tega nalogo ne morete zapreti.
+                    </p>
+                  </div>
+
+                  <div className="h-px bg-[#1E1E1E] mb-7" />
+
+                  {napakaModa && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-6">
+                      {napakaModa}
+                    </div>
+                  )}
+
+                  {/* Stars */}
+                  <div className="mb-7">
+                    <p className="text-xs text-[#525252] uppercase tracking-wider mb-4 font-semibold text-center">
+                      Ocena izvajalca
+                      {zvezdiceZakljucek === 0 && <span className="text-orange-500 ml-1">— obvezno</span>}
+                    </p>
+                    <div className="flex justify-center gap-3">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setZvezdiceZakljucek(s)}
+                          className="focus:outline-none transition-all duration-150 hover:scale-125 active:scale-95 group"
+                        >
+                          <svg
+                            className={`w-10 h-10 transition-colors duration-150 ${
+                              s <= zvezdiceZakljucek
+                                ? "text-[#F97316] drop-shadow-[0_0_6px_rgba(249,115,22,0.5)]"
+                                : "text-[#2E2E2E] group-hover:text-[#F97316]/40"
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                    {zvezdiceZakljucek > 0 && (
+                      <p className="text-center text-[#F97316] text-sm font-semibold mt-3">
+                        {["", "Slabo", "Zadostno", "Dobro", "Zelo dobro", "Odlično"][zvezdiceZakljucek]} · {zvezdiceZakljucek}/5
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Comment */}
+                  <div className="mb-7">
+                    <p className="text-xs text-[#525252] uppercase tracking-wider mb-2 font-semibold">Komentar</p>
+                    <textarea
+                      className="w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder-[#444444] focus:outline-none focus:ring-2 focus:ring-[#F97316]/50 focus:border-[#F97316]/30 transition-all resize-none"
+                      placeholder="Kako je bilo? (neobvezno)"
+                      rows={3}
+                      value={komentarZakljucek}
+                      onChange={(e) => setKomentarZakljucek(e.target.value)}
+                    />
+                  </div>
+
+                  <button
+                    onClick={oddajZakljucek}
+                    disabled={oddajamZakljucek || zvezdiceZakljucek < 1}
+                    className="w-full bg-[#F97316] hover:bg-orange-600 text-white py-4 rounded-xl font-bold tracking-wide transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed text-base shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:-translate-y-0.5 active:translate-y-0 mb-4"
+                  >
+                    {oddajamZakljucek ? "Potrjujem..." : zvezdiceZakljucek < 1 ? "Najprej izberite oceno" : "Potrdi in oceni izvajalca"}
+                  </button>
+
+                  <div className="text-center">
                     <button
-                      key={s}
-                      onClick={() => setZvezdiceZakljucek(s)}
-                      className="focus:outline-none transition-all duration-150 hover:scale-125 active:scale-95 group"
+                      onClick={() => { setReklamacijaKorak(true); setNapakaModa(""); }}
+                      className="text-sm text-red-400/70 hover:text-red-400 transition-colors duration-150 underline underline-offset-2"
                     >
-                      <svg
-                        className={`w-10 h-10 transition-colors duration-150 ${
-                          s <= zvezdiceZakljucek
-                            ? "text-[#F97316] drop-shadow-[0_0_6px_rgba(249,115,22,0.5)]"
-                            : "text-[#2E2E2E] group-hover:text-[#F97316]/40"
-                        }`}
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
+                      Naloga ni bila opravljena
                     </button>
-                  ))}
-                </div>
-                {zvezdiceZakljucek > 0 && (
-                  <p className="text-center text-[#F97316] text-sm font-semibold mt-3">
-                    {["", "Slabo", "Zadostno", "Dobro", "Zelo dobro", "Odlično"][zvezdiceZakljucek]} · {zvezdiceZakljucek}/5
-                  </p>
-                )}
-              </div>
-
-              {/* Comment */}
-              <div className="mb-7">
-                <p className="text-xs text-[#525252] uppercase tracking-wider mb-2 font-semibold">Komentar</p>
-                <textarea
-                  className="w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder-[#444444] focus:outline-none focus:ring-2 focus:ring-[#F97316]/50 focus:border-[#F97316]/30 transition-all resize-none"
-                  placeholder="Kako je bilo? (neobvezno)"
-                  rows={3}
-                  value={komentarZakljucek}
-                  onChange={(e) => setKomentarZakljucek(e.target.value)}
-                />
-              </div>
-
-              <button
-                onClick={oddajZakljucek}
-                disabled={oddajamZakljucek || zvezdiceZakljucek < 1}
-                className="w-full bg-[#F97316] hover:bg-orange-600 text-white py-4 rounded-xl font-bold tracking-wide transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed text-base shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:-translate-y-0.5 active:translate-y-0"
-              >
-                {oddajamZakljucek ? "Potrjujem..." : zvezdiceZakljucek < 1 ? "Najprej izberite oceno" : "Potrdi in oceni izvajalca"}
-              </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

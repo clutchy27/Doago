@@ -55,8 +55,9 @@ model Naloga {
   createdAt     DateTime    @default(now())
   narocnikId    String
   izvajalecId   String?
-  nujna         Boolean     @default(false)
-  profesionalna Boolean     @default(false)
+  nujna              Boolean     @default(false)
+  profesionalna      Boolean     @default(false)
+  reklamacijaRazlog  String?
   izvajalec     User?       @relation("IzvajalecNaloge", fields: [izvajalecId], references: [id])
   narocnik      User        @relation("NarocnikNaloge", fields: [narocnikId], references: [id])
   Obvestilo     Obvestilo[]

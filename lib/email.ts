@@ -343,6 +343,73 @@ export async function sendTaskClosedEmail(opts: {
   }).catch((err) => console.error("[email] taskClosed:", err));
 }
 
+export async function sendReklamacijaEmail(opts: {
+  to: string;
+  naslov: string;
+  razlog: string;
+}): Promise<void> {
+  const { to, naslov, razlog } = opts;
+
+  const body = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#ffffff;">Reklamacija vložena</h1>
+    <p style="margin:0 0 28px;font-size:14px;color:#666666;">Naročnik je vložil reklamacijo za nalogo.</p>
+
+    <div style="background-color:#1a1a1a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="margin-bottom:12px;">
+        <span style="font-size:16px;font-weight:600;color:#ffffff;">${naslov}</span>
+      </div>
+      <div style="background-color:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px 18px;">
+        <p style="margin:0;font-size:13px;color:#ef4444;font-weight:600;">Razlog reklamacije:</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#888888;">${razlog}</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:#888888;line-height:1.7;margin:0 0 28px;">
+      Naročnik je vložil reklamacijo za nalogo "${naslov}". Razlog: ${razlog}. Kontaktirajte podporo.
+    </p>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `⚠️ Reklamacija za nalogo "${naslov}"`,
+    html: layout(body),
+  }).catch((err) => console.error("[email] reklamacija:", err));
+}
+
+export async function sendReklamacijaPotrdilEmail(opts: {
+  to: string;
+  naslov: string;
+}): Promise<void> {
+  const { to, naslov } = opts;
+
+  const body = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#ffffff;">Reklamacija sprejeta</h1>
+    <p style="margin:0 0 28px;font-size:14px;color:#666666;">Vaša reklamacija je bila uspešno vložena.</p>
+
+    <div style="background-color:#1a1a1a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="margin-bottom:12px;">
+        <span style="font-size:16px;font-weight:600;color:#ffffff;">${naslov}</span>
+      </div>
+      <div style="background-color:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px 18px;">
+        <p style="margin:0;font-size:13px;color:#ef4444;font-weight:600;">Reklamacija je bila sprejeta</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#888888;">Vaša reklamacija za nalogo "${naslov}" je bila sprejeta. Kontaktirali vas bomo.</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:#888888;line-height:1.7;margin:0;">
+      Naša ekipa bo pregledala reklamacijo in se oglasila v najkrajšem možnem času.
+    </p>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Reklamacija za nalogo "${naslov}" je bila sprejeta`,
+    html: layout(body),
+  }).catch((err) => console.error("[email] reklamacijaPotrdilo:", err));
+}
+
 export async function sendTaskRejectedEmail(opts: {
   to: string;
   naslov: string;
