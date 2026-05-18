@@ -9,16 +9,19 @@ datasource db {
 }
 
 model User {
-  id                 String      @id @default(cuid())
-  ime                String
-  email              String      @unique
-  geslo              String
-  vloga              String      @default("narocnik")
-  createdAt          DateTime    @default(now())
-  nalogaKotNarocnik  Naloga[]    @relation("NarocnikNaloge")
-  nalogaKotIzvajalec Naloga[]    @relation("IzvajalecNaloge")
-  sporocila          Sporocilo[]
-  spPodatki          SpPodatki?
+  id                              String      @id @default(cuid())
+  ime                             String
+  email                           String      @unique
+  geslo                           String
+  vloga                           String      @default("narocnik")
+  createdAt                       DateTime    @default(now())
+  nalogaKotIzvajalec              Naloga[]    @relation("IzvajalecNaloge")
+  nalogaKotNarocnik               Naloga[]    @relation("NarocnikNaloge")
+  Obvestilo                       Obvestilo[]
+  Rating_Rating_izvajalecIdToUser Rating[]    @relation("Rating_izvajalecIdToUser")
+  Rating_Rating_narocnikIdToUser  Rating[]    @relation("Rating_narocnikIdToUser")
+  spPodatki                       SpPodatki?
+  sporocila                       Sporocilo[]
 }
 
 model SpPodatki {
@@ -28,43 +31,69 @@ model SpPodatki {
   davcnaStevilka String   @unique
   iban           String
   naslov         String
-  opis           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  userId         String   @unique
   kategorije     String   @default("")
   mesta          String   @default("")
+  opis           String?
   profilUrejen   Boolean  @default(false)
   skupniZasluzek Float    @default(0)
   steviloOcen    Int      @default(0)
   povprecnaOcena Float    @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
   user           User     @relation(fields: [userId], references: [id])
-  userId         String   @unique
 }
 
 model Naloga {
-  id          String      @id @default(cuid())
-  naslov      String
-  opis        String
-  cena        Float
-  kategorija  String
-  lokacija    String
-  status      String      @default("odprta")
+  id            String      @id @default(cuid())
+  naslov        String
+  opis          String
+  cena          Float
+  kategorija    String
+  lokacija      String
+  status        String      @default("odprta")
+  createdAt     DateTime    @default(now())
+  narocnikId    String
+  izvajalecId   String?
   nujna         Boolean     @default(false)
   profesionalna Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  narocnik    User        @relation("NarocnikNaloge", fields: [narocnikId], references: [id])
-  narocnikId  String
-  izvajalec   User?       @relation("IzvajalecNaloge", fields: [izvajalecId], references: [id])
-  izvajalecId String?
-  sporocila   Sporocilo[]
+  izvajalec     User?       @relation("IzvajalecNaloge", fields: [izvajalecId], references: [id])
+  narocnik      User        @relation("NarocnikNaloge", fields: [narocnikId], references: [id])
+  Obvestilo     Obvestilo[]
+  Rating        Rating?
+  sporocila     Sporocilo[]
 }
 
 model Sporocilo {
   id        String   @id @default(cuid())
   besedilo  String
   createdAt DateTime @default(now())
-  avtor     User     @relation(fields: [avtorId], references: [id])
   avtorId   String
-  naloga    Naloga   @relation(fields: [nalogaId], references: [id])
   nalogaId  String
+  avtor     User     @relation(fields: [avtorId], references: [id])
+  naloga    Naloga   @relation(fields: [nalogaId], references: [id])
+}
+
+model Obvestilo {
+  id        String   @id
+  besedilo  String
+  userId    String
+  nalogaId  String?
+  prebrano  Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  Naloga    Naloga?  @relation(fields: [nalogaId], references: [id], onUpdate: NoAction)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Rating {
+  id                            String   @id
+  zvezde                        Int
+  komentar                      String?
+  nalogaId                      String   @unique
+  narocnikId                    String
+  izvajalecId                   String
+  createdAt                     DateTime @default(now()) @db.Timestamptz(6)
+  User_Rating_izvajalecIdToUser User     @relation("Rating_izvajalecIdToUser", fields: [izvajalecId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  Naloga                        Naloga   @relation(fields: [nalogaId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  User_Rating_narocnikIdToUser  User     @relation("Rating_narocnikIdToUser", fields: [narocnikId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
