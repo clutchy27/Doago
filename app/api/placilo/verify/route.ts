@@ -3,6 +3,8 @@ import { getToken } from "next-auth/jwt";
 import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 
+const SISTEM_BESEDILO = "✅ Plačilo potrjeno! Zmenita se za čas in kraj opravljanja naloge.";
+
 export async function GET(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -24,12 +26,25 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ paid: true, nalogaId: null });
     }
 
-    const { rows } = await pool.query(
-      `SELECT id FROM "Naloga" WHERE id = $1`,
+    // Posodobi status — WHERE status = 'sprejeta' ščiti pred duplikacijo (webhook je morda že posodobil)
+    const { rowCount } = await pool.query(
+      `UPDATE "Naloga" SET status = 'plačano' WHERE id = $1 AND status = 'sprejeta'`,
       [nalogaId]
     );
 
-    return NextResponse.json({ paid: true, nalogaId: rows[0]?.id ?? nalogaId });
+    // Vstavi sistemsko sporočilo samo če še ne obstaja
+    if (rowCount && rowCount > 0) {
+      await pool.query(
+        `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId")
+         SELECT $1, $2, NULL, $3
+         WHERE NOT EXISTS (
+           SELECT 1 FROM "Sporocilo" WHERE "nalogaId" = $3 AND besedilo LIKE '✅ Plačilo%'
+         )`,
+        [crypto.randomUUID(), SISTEM_BESEDILO, nalogaId]
+      );
+    }
+
+    return NextResponse.json({ paid: true, nalogaId });
   } catch (err) {
     console.error("[GET /api/placilo/verify]", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
