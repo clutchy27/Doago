@@ -35,8 +35,8 @@ export async function GET(req: NextRequest) {
     // Vstavi sistemsko sporočilo samo če še ne obstaja
     if (rowCount && rowCount > 0) {
       await pool.query(
-        `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId")
-         SELECT $1, $2, NULL, $3
+        `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId", "ustvarjenoOb")
+         SELECT $1, $2, (SELECT "narocnikId" FROM "Naloga" WHERE id = $3), $3, NOW()
          WHERE NOT EXISTS (
            SELECT 1 FROM "Sporocilo" WHERE "nalogaId" = $3 AND besedilo LIKE '✅ Plačilo%'
          )`,
