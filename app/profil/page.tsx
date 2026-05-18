@@ -32,12 +32,29 @@ type Profil = {
   };
 };
 
+const KATEGORIJE_OPTIONS = [
+  "Hišna opravila", "Prevoz", "IT pomoč", "Poučevanje",
+  "Vrtnarjenje", "Čiščenje", "Dostava", "Montaža",
+  "Slikopleskanje", "Drugo",
+];
+
+const MESTA_OPTIONS = [
+  "Ljubljana", "Maribor", "Celje", "Kranj", "Koper", "Velenje",
+  "Novo Mesto", "Ptuj", "Trbovlje", "Kamnik", "Domžale", "Škofja Loka",
+  "Nova Gorica", "Slovenj Gradec", "Murska Sobota", "Jesenice",
+  "Postojna", "Izola", "Slovenska Bistrica", "Litija", "Ajdovščina",
+  "Logatec", "Sežana", "Idrija", "Radovljica", "Vrhnika",
+];
+
 type SpPodatki = {
   ime: string;
   priimek: string;
   davcnaStevilka: string;
   iban: string;
   naslov: string;
+  opis?: string;
+  kategorije?: string;
+  mesta?: string;
 };
 
 function Zvezdice({ ocena, stevilo }: { ocena: number | null; stevilo?: number }) {
@@ -84,6 +101,13 @@ export default function ProfilPage() {
   const [spForm, setSpForm] = useState<SpPodatki>({ ime: "", priimek: "", davcnaStevilka: "", iban: "", naslov: "" });
   const [shranjujemSp, setShranjujemSp] = useState(false);
   const [napakaSp, setNapakaSp] = useState("");
+
+  const [urejanjeProfila, setUrejanjeProfila] = useState(false);
+  const [profilOpisForm, setProfilOpisForm] = useState("");
+  const [profilKategorije, setProfilKategorije] = useState<string[]>([]);
+  const [profilMesta, setProfilMesta] = useState<string[]>([]);
+  const [shranjujemProfil, setShranjujemProfil] = useState(false);
+  const [napakaProfil, setNapakaProfil] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/prijava");
@@ -165,6 +189,37 @@ export default function ProfilPage() {
     setSpForm(spPodatki ?? { ime: "", priimek: "", davcnaStevilka: "", iban: "", naslov: "" });
     setNapakaSp("");
     setUrejanjeSpPodatkov(true);
+  };
+
+  const openProfilEdit = () => {
+    setProfilOpisForm(spPodatki?.opis ?? "");
+    setProfilKategorije(spPodatki?.kategorije ? spPodatki.kategorije.split(",").filter(Boolean) : []);
+    setProfilMesta(spPodatki?.mesta ? spPodatki.mesta.split(",").filter(Boolean) : []);
+    setNapakaProfil("");
+    setUrejanjeProfila(true);
+  };
+
+  const shraniProfil2 = async () => {
+    setShranjujemProfil(true);
+    setNapakaProfil("");
+    const res = await fetch("/api/profil/sp", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ opis: profilOpisForm, kategorije: profilKategorije, mesta: profilMesta }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setSpPodatki((prev) => prev ? {
+        ...prev,
+        opis: data.opis,
+        kategorije: data.kategorije,
+        mesta: data.mesta,
+      } : prev);
+      setUrejanjeProfila(false);
+    } else {
+      setNapakaProfil(data.error || "Napaka pri shranjevanju");
+    }
+    setShranjujemProfil(false);
   };
 
   if (status === "loading" || loading) {
@@ -295,6 +350,140 @@ export default function ProfilPage() {
         {/* ── IZVAJALEC layout (s.p. + študent) ── */}
         {isGreen && (
           <>
+            {/* Moj profil — opis, kategorije, mesta */}
+            {isIzvajalec && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">Moj profil</span>
+                  <span className="text-gray-700 text-xs">— vidno naročnikom</span>
+                </div>
+                <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 sm:p-6 hover:border-white/8 transition-all duration-200">
+                  {!urejanjeProfila ? (
+                    <>
+                      {/* Ime in priimek */}
+                      {spPodatki && (
+                        <p className="text-white font-semibold text-sm mb-3">
+                          {spPodatki.ime} {spPodatki.priimek}
+                        </p>
+                      )}
+
+                      {/* Opis */}
+                      {spPodatki?.opis ? (
+                        <p className="text-gray-400 text-sm leading-relaxed mb-4">{spPodatki.opis}</p>
+                      ) : (
+                        <p className="text-gray-700 text-sm italic mb-4">Ni opisa storitev</p>
+                      )}
+
+                      {/* Kategorije */}
+                      {spPodatki?.kategorije && spPodatki.kategorije.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {spPodatki.kategorije.split(",").filter(Boolean).map((k) => (
+                            <span key={k} className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                              {k}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Mesta */}
+                      {spPodatki?.mesta && spPodatki.mesta.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {spPodatki.mesta.split(",").filter(Boolean).map((m) => (
+                            <span key={m} className="text-xs px-2.5 py-1 rounded-full bg-[#1a1a1a] text-gray-500 border border-white/8">
+                              📍 {m}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <button
+                        onClick={openProfilEdit}
+                        className="w-full border border-green-500/20 text-green-400 py-2.5 rounded-xl text-sm font-medium hover:bg-green-500/5 hover:border-green-500/30 transition-all duration-150"
+                      >
+                        Uredi profil
+                      </button>
+                    </>
+                  ) : (
+                    /* Inline edit mode */
+                    <div className="flex flex-col gap-4">
+                      {napakaProfil && (
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3">
+                          {napakaProfil}
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Kratek opis storitev</label>
+                        <textarea
+                          className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all resize-none"
+                          placeholder="Sem izkušen izvajalec z večletnimi izkušnjami v..."
+                          rows={4}
+                          value={profilOpisForm}
+                          onChange={(e) => setProfilOpisForm(e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider mb-3 block">Kategorije storitev</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {KATEGORIJE_OPTIONS.map((k) => (
+                            <button
+                              key={k}
+                              type="button"
+                              onClick={() => setProfilKategorije((prev) => prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k])}
+                              className={`px-3 py-2 rounded-xl text-sm font-medium text-left transition-all duration-150 border ${
+                                profilKategorije.includes(k)
+                                  ? "bg-green-500/15 border-green-500/40 text-green-400"
+                                  : "bg-[#1a1a1a] border-white/8 text-gray-500 hover:border-white/15 hover:text-gray-300"
+                              }`}
+                            >
+                              {k}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider mb-3 block">Mesta kjer delaš</label>
+                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                          {MESTA_OPTIONS.map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => setProfilMesta((prev) => prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m])}
+                              className={`px-3 py-2 rounded-xl text-sm font-medium text-left transition-all duration-150 border ${
+                                profilMesta.includes(m)
+                                  ? "bg-green-500/15 border-green-500/40 text-green-400"
+                                  : "bg-[#1a1a1a] border-white/8 text-gray-500 hover:border-white/15 hover:text-gray-300"
+                              }`}
+                            >
+                              {m}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 mt-2">
+                        <button
+                          onClick={() => setUrejanjeProfila(false)}
+                          className="flex-1 border border-white/10 text-gray-400 py-2.5 rounded-xl font-medium hover:bg-white/5 transition-all duration-150 text-sm"
+                        >
+                          Prekliči
+                        </button>
+                        <button
+                          onClick={shraniProfil2}
+                          disabled={shranjujemProfil}
+                          className="flex-1 bg-green-500 text-white py-2.5 rounded-xl font-semibold hover:bg-green-600 transition-all duration-150 disabled:opacity-50 text-sm"
+                        >
+                          {shranjujemProfil ? "Shranjujem..." : "Shrani"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* S.p. podatki — only for s.p. izvajalec */}
             {isIzvajalec && (
               <div className="mb-6">

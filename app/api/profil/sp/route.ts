@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const userId = (token.sub ?? token.id) as string;
 
     const { rows } = await pool.query(
-      `SELECT id, ime, priimek, "davcnaStevilka", iban, naslov FROM "SpPodatki" WHERE "userId" = $1`,
+      `SELECT id, ime, priimek, "davcnaStevilka", iban, naslov, opis, kategorije, mesta FROM "SpPodatki" WHERE "userId" = $1`,
       [userId]
     );
 
@@ -19,6 +19,34 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(rows[0]);
   } catch (err) {
     console.error("[GET /api/profil/sp]", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) return NextResponse.json({ error: "Ni avtorizacije" }, { status: 401 });
+
+    const userId = (token.sub ?? token.id) as string;
+    const { opis, kategorije, mesta } = await req.json();
+
+    const kategorijeStr = Array.isArray(kategorije) ? kategorije.join(",") : "";
+    const mestaStr = Array.isArray(mesta) ? mesta.join(",") : "";
+
+    const { rows } = await pool.query(
+      `UPDATE "SpPodatki"
+       SET opis = $1, kategorije = $2, mesta = $3, "updatedAt" = NOW()
+       WHERE "userId" = $4
+       RETURNING opis, kategorije, mesta`,
+      [opis?.trim() ?? "", kategorijeStr, mestaStr, userId]
+    );
+
+    if (rows.length === 0) return NextResponse.json({ error: "Ni podatkov" }, { status: 404 });
+
+    return NextResponse.json(rows[0]);
+  } catch (err) {
+    console.error("[PATCH /api/profil/sp]", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

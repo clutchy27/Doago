@@ -7,6 +7,8 @@ export type ApprovalTask = {
   izvajalecIme: string;
   izvajalecVloga: string;
   izvajalecOpis?: string | null;
+  izvajalecKategorije?: string | null;
+  izvajalecMesta?: string | null;
   izvajalecPovprecnaOcena?: number | null;
   izvajalecSteviloOpravljenih: number;
 };
@@ -30,6 +32,8 @@ export default function IzvajalecApprovalModal({ naloga, isNarocnik, onZakljucen
   const isSP = naloga.izvajalecVloga === "sp";
   const accentBg = isNarocnik ? "bg-[#F97316]" : "bg-[#22C55E]";
   const stars = naloga.izvajalecPovprecnaOcena ?? 0;
+  const kategorije = naloga.izvajalecKategorije ? naloga.izvajalecKategorije.split(",").filter(Boolean) : [];
+  const mesta = naloga.izvajalecMesta ? naloga.izvajalecMesta.split(",").filter(Boolean) : [];
 
   const odloci = async (action: "potrdi" | "zavrni") => {
     setLoading(action);
@@ -97,10 +101,32 @@ export default function IzvajalecApprovalModal({ naloga, isNarocnik, onZakljucen
             </div>
           </div>
 
-          {naloga.izvajalecOpis && (
-            <p className="text-sm text-[#A3A3A3] mt-4 pt-4 border-t border-[#2A2A2A] leading-relaxed line-clamp-3">
-              {naloga.izvajalecOpis}
-            </p>
+          {(naloga.izvajalecOpis || kategorije.length > 0 || mesta.length > 0) && (
+            <div className="mt-4 pt-4 border-t border-[#2A2A2A] flex flex-col gap-3">
+              {naloga.izvajalecOpis && (
+                <p className="text-sm text-[#A3A3A3] leading-relaxed line-clamp-3">
+                  {naloga.izvajalecOpis}
+                </p>
+              )}
+              {kategorije.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {kategorije.map((k) => (
+                    <span key={k} className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                      {k}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {mesta.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {mesta.map((m) => (
+                    <span key={m} className="text-xs px-2 py-0.5 rounded-full bg-[#2A2A2A] text-[#A3A3A3] border border-[#333333]">
+                      📍 {m}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 

@@ -56,6 +56,8 @@ export async function GET(req: NextRequest) {
                   u_i.ime AS "izvajalecIme",
                   u_i.vloga AS "izvajalecVloga",
                   sp.opis AS "izvajalecOpis",
+                  sp.kategorije AS "izvajalecKategorije",
+                  sp.mesta AS "izvajalecMesta",
                   (SELECT AVG(zvezde)::FLOAT FROM "Rating" WHERE "izvajalecId" = u_i.id) AS "izvajalecPovprecnaOcena",
                   (SELECT COUNT(*)::INT FROM "Naloga" WHERE "izvajalecId" = u_i.id AND status = 'zaprta') AS "izvajalecSteviloOpravljenih"
            FROM "Naloga" n

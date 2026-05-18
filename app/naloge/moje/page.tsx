@@ -106,6 +106,8 @@ export default function MojeNalogePage() {
                 izvajalecIme: first.izvajalecIme ?? "Izvajalec",
                 izvajalecVloga: first.izvajalecVloga ?? "",
                 izvajalecOpis: first.izvajalecOpis ?? null,
+                izvajalecKategorije: first.izvajalecKategorije ?? null,
+                izvajalecMesta: first.izvajalecMesta ?? null,
                 izvajalecPovprecnaOcena: first.izvajalecPovprecnaOcena ?? null,
                 izvajalecSteviloOpravljenih: parseInt(first.izvajalecSteviloOpravljenih) || 0,
               };
