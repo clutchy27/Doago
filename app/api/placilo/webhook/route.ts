@@ -34,15 +34,20 @@ export async function POST(req: NextRequest) {
     if (session.payment_status === "paid") {
       const nalogaId = session.metadata?.nalogaId;
       if (nalogaId) {
-        const { rowCount } = await pool.query(
-          `UPDATE "Naloga" SET status = 'plačano' WHERE id = $1 AND status = 'sprejeta' RETURNING id`,
-          [nalogaId]
-        );
-        if (rowCount && rowCount > 0) {
-          await pool.query(
-            `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId") VALUES ($1, $2, NULL, $3)`,
-            [crypto.randomUUID(), SISTEM_BESEDILO, nalogaId]
+        try {
+          const { rowCount } = await pool.query(
+            `UPDATE "Naloga" SET status = 'plačano' WHERE id = $1 AND status = 'sprejeta' RETURNING id`,
+            [nalogaId]
           );
+          if (rowCount && rowCount > 0) {
+            await pool.query(
+              `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId") VALUES ($1, $2, NULL, $3)`,
+              [crypto.randomUUID(), SISTEM_BESEDILO, nalogaId]
+            );
+          }
+        } catch (err) {
+          console.error("[webhook] DB error:", err);
+          return NextResponse.json({ error: "DB error" }, { status: 500 });
         }
       }
     }
