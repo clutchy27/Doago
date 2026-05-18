@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useMode } from "@/context/ModeContext";
 
-export function Nav({ badge, current }: { badge?: number; current?: string }) {
+export function Nav({ current }: { current?: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { mode, setMode } = useMode();
@@ -95,14 +95,6 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
               <svg className="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              {!!badge && badge > 0 && (
-                <span
-                  className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
-                  style={{ background: "var(--accent)" }}
-                >
-                  {badge}
-                </span>
-              )}
             </button>
 
             {dropdownOpen && (
@@ -146,12 +138,6 @@ export function Nav({ badge, current }: { badge?: number; current?: string }) {
           className="sm:hidden relative p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors shrink-0"
           aria-label="Meni"
         >
-          {!!badge && badge > 0 && (
-            <span
-              className="absolute top-1 right-1 w-2 h-2 rounded-full"
-              style={{ background: "var(--accent)" }}
-            />
-          )}
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {mobileOpen
               ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

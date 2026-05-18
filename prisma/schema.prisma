@@ -69,9 +69,9 @@ model Sporocilo {
   id        String   @id @default(cuid())
   besedilo  String
   createdAt DateTime @default(now())
-  avtorId   String
+  avtorId   String?
   nalogaId  String
-  avtor     User     @relation(fields: [avtorId], references: [id])
+  avtor     User?    @relation(fields: [avtorId], references: [id])
   naloga    Naloga   @relation(fields: [nalogaId], references: [id])
 }
 

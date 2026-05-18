@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
                WHERE s2."nalogaId" = n.id
                ORDER BY s2."createdAt" DESC LIMIT 1) AS "latestMessageAvtorId",
               (SELECT u2.ime FROM "Sporocilo" s2
-               JOIN "User" u2 ON u2.id = s2."avtorId"
+               LEFT JOIN "User" u2 ON u2.id = s2."avtorId"
                WHERE s2."nalogaId" = n.id
                ORDER BY s2."createdAt" DESC LIMIT 1) AS "latestMessageAvtorIme"
        FROM "Naloga" n

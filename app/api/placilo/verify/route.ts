@@ -3,6 +3,8 @@ import { getToken } from "next-auth/jwt";
 import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 
+const SISTEM_BESEDILO = "✅ Plačilo potrjeno! Zmenita se za čas in kraj opravljanja naloge.";
+
 export async function GET(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -24,10 +26,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ paid: true, nalogaId: null });
     }
 
-    await pool.query(
-      `UPDATE "Naloga" SET status = 'plačano' WHERE id = $1 AND status IN ('sprejeta', 'plačano')`,
+    const { rowCount } = await pool.query(
+      `UPDATE "Naloga" SET status = 'plačano' WHERE id = $1 AND status = 'sprejeta' RETURNING id`,
       [nalogaId]
     );
+    if (rowCount && rowCount > 0) {
+      await pool.query(
+        `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId") VALUES ($1, $2, NULL, $3)`,
+        [crypto.randomUUID(), SISTEM_BESEDILO, nalogaId]
+      );
+    }
 
     return NextResponse.json({ paid: true, nalogaId });
   } catch (err) {

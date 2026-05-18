@@ -45,7 +45,6 @@ export default function MojeNalogePage() {
   const [tab, setTab] = useState<Tab>("objavljene");
   const [naloge, setNaloge] = useState<Naloga[]>([]);
   const [loading, setLoading] = useState(true);
-  const [obvestila, setObvestila] = useState<{ id: string; prebrano: boolean }[]>([]);
 
   // Create task modal
   const [modal, setModal] = useState(false);
@@ -82,13 +81,6 @@ export default function MojeNalogePage() {
     if (status === "unauthenticated") router.push("/prijava");
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetch("/api/obvestila")
-        .then((r) => r.json())
-        .then((data) => { if (Array.isArray(data)) setObvestila(data); });
-    }
-  }, [status]);
 
   useEffect(() => {
     setTab(mode === "narocnik" ? "objavljene" : "sprejete");
@@ -297,7 +289,6 @@ export default function MojeNalogePage() {
   }
   if (!session) return null;
 
-  const neprebrana = obvestila.filter((o) => !o.prebrano).length;
   const isNarocnik = mode === "narocnik";
   const accentBg = isNarocnik ? "bg-[#F97316]" : "bg-[#22C55E]";
   const accentHover = isNarocnik ? "hover:bg-orange-600" : "hover:bg-green-600";
@@ -309,7 +300,7 @@ export default function MojeNalogePage() {
 
   return (
     <div className="min-h-screen bg-[#0F0F0F]">
-      <Nav badge={neprebrana > 0 ? neprebrana : undefined} current="moje" />
+      <Nav current="moje" />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-8 py-12">
 

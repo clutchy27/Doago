@@ -3,6 +3,8 @@ import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import type Stripe from "stripe";
 
+const SISTEM_BESEDILO = "✅ Plačilo potrjeno! Zmenita se za čas in kraj opravljanja naloge.";
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
@@ -32,10 +34,16 @@ export async function POST(req: NextRequest) {
     if (session.payment_status === "paid") {
       const nalogaId = session.metadata?.nalogaId;
       if (nalogaId) {
-        await pool.query(
-          `UPDATE "Naloga" SET status = 'plačano' WHERE id = $1 AND status IN ('sprejeta', 'plačano')`,
+        const { rowCount } = await pool.query(
+          `UPDATE "Naloga" SET status = 'plačano' WHERE id = $1 AND status = 'sprejeta' RETURNING id`,
           [nalogaId]
         );
+        if (rowCount && rowCount > 0) {
+          await pool.query(
+            `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId") VALUES ($1, $2, NULL, $3)`,
+            [crypto.randomUUID(), SISTEM_BESEDILO, nalogaId]
+          );
+        }
       }
     }
   }

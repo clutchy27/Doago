@@ -18,8 +18,8 @@ type Sporocilo = {
   id: string;
   besedilo: string;
   createdAt: string;
-  avtorId: string;
-  avtorIme: string;
+  avtorId: string | null;
+  avtorIme: string | null;
 };
 
 function formatCas(iso: string) {
@@ -211,6 +211,15 @@ export default function ChatWidget() {
                   <p className="text-[#525252] text-sm text-center mt-12">Še ni sporočil. Začnite pogovor.</p>
                 ) : (
                   sporocila.map((s) => {
+                    if (!s.avtorId) {
+                      return (
+                        <div key={s.id} className="flex justify-center my-1">
+                          <span className="text-[11px] text-[#525252] bg-[#1E1E1E] border border-[#2A2A2A] rounded-full px-3 py-1 text-center">
+                            {s.besedilo}
+                          </span>
+                        </div>
+                      );
+                    }
                     const moje = s.avtorId === userId;
                     return (
                       <div key={s.id} className={`flex flex-col ${moje ? "items-end" : "items-start"}`}>

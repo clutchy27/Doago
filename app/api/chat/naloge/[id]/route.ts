@@ -30,7 +30,7 @@ export async function GET(
     const { rows } = await pool.query(
       `SELECT s.id, s.besedilo, s."createdAt", s."avtorId", u.ime AS "avtorIme"
        FROM "Sporocilo" s
-       JOIN "User" u ON u.id = s."avtorId"
+       LEFT JOIN "User" u ON u.id = s."avtorId"
        WHERE s."nalogaId" = $1
        ORDER BY s."createdAt" ASC`,
       [id]
