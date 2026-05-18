@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
       }
       if (tab === "sprejete") {
         const { rows } = await pool.query(
-          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status IN ('sprejeta', 'v teku', 'plačano') ORDER BY "createdAt" DESC`,
+          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status IN ('sprejeta', 'plačano') ORDER BY "createdAt" DESC`,
           [userId]
         );
         return NextResponse.json(rows);

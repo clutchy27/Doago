@@ -30,7 +30,6 @@ type Naloga = {
 const statusBarva: Record<string, string> = {
   odprta: "bg-green-500/10 text-green-400 border border-green-500/20",
   sprejeta: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  "v teku": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   "plačano": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
   zaprta: "bg-white/5 text-gray-500 border border-white/10",
 };

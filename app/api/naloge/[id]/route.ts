@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { pool } from "@/lib/db";
 
-const initPromise = Promise.all([
-  pool.query(`ALTER TABLE "Naloga" ADD COLUMN IF NOT EXISTS "izvajalecId" TEXT REFERENCES "User"(id)`),
-  pool.query(`
+const initPromise = pool.query(`
     CREATE TABLE IF NOT EXISTS "Obvestilo" (
       id          TEXT PRIMARY KEY,
       besedilo    TEXT NOT NULL,
@@ -13,8 +11,7 @@ const initPromise = Promise.all([
       prebrano    BOOLEAN NOT NULL DEFAULT FALSE,
       "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
-  `),
-]).catch((err) => console.error("[init] error:", err));
+  `).catch((err) => console.error("[init] error:", err));
 
 export async function GET(
   req: NextRequest,

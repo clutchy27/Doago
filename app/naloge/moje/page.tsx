@@ -31,7 +31,6 @@ const statusBarva: Record<string, string> = {
   odprta: "bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/25",
   caka_potrditev: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
   sprejeta: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  "v teku": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   "plačano": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
   zaprta: "bg-[#1A1A1A] text-[#525252] border border-[#2A2A2A]",
 };
