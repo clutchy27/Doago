@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
       }
       if (tab === "sprejete") {
         const { rows } = await pool.query(
-          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status IN ('sprejeta', 'plačano') ORDER BY "createdAt" DESC`,
+          `SELECT * FROM "Naloga" WHERE "narocnikId" = $1 AND status IN ('sprejeta', 'plačano', 'caka_zakljucek') ORDER BY "createdAt" DESC`,
           [userId]
         );
         return NextResponse.json(rows);
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
           `SELECT n.*, u.ime AS "narocnikIme"
            FROM "Naloga" n
            JOIN "User" u ON u.id = n."narocnikId"
-           WHERE n."izvajalecId" = $1 AND n.status != 'opravljeno'
+           WHERE n."izvajalecId" = $1 AND n.status IN ('caka_potrditev', 'sprejeta', 'plačano', 'caka_zakljucek')
            ORDER BY n."createdAt" DESC`,
           [userId]
         );
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
           `SELECT n.*, u.ime AS "narocnikIme"
            FROM "Naloga" n
            JOIN "User" u ON u.id = n."narocnikId"
-           WHERE n."izvajalecId" = $1 AND n.status = 'opravljeno'
+           WHERE n."izvajalecId" = $1 AND n.status = 'zaprta'
            ORDER BY n."createdAt" DESC`,
           [userId]
         );

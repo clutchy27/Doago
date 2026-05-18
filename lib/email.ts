@@ -264,6 +264,85 @@ export async function sendTaskConfirmedEmail(opts: {
   }).catch((err) => console.error("[email] taskConfirmed:", err));
 }
 
+export async function sendTaskCompletedEmail(opts: {
+  to: string;
+  naslov: string;
+  izvajalecIme: string;
+}): Promise<void> {
+  const { to, naslov, izvajalecIme } = opts;
+
+  const body = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#ffffff;">Naloga opravljena! ✅</h1>
+    <p style="margin:0 0 28px;font-size:14px;color:#666666;">Izvajalec je označil vašo nalogo kot opravljeno.</p>
+
+    <div style="background-color:#1a1a1a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="margin-bottom:12px;">
+        <span style="font-size:16px;font-weight:600;color:#ffffff;">${naslov}</span>
+      </div>
+      <div style="background-color:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.15);border-radius:10px;padding:14px 18px;">
+        <p style="margin:0;font-size:13px;color:#f97316;font-weight:600;">👷 ${izvajalecIme}</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#888888;">je označil nalogo kot opravljeno.</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:#888888;line-height:1.7;margin:0 0 28px;">
+      Prijavite se v aplikacijo in potrdite ter ocenite izvajalca. Vaša povratna informacija pomaga skupnosti.
+    </p>
+
+    <a href="${process.env.NEXTAUTH_URL}/naloge/moje"
+       style="display:block;background:linear-gradient(135deg,#f97316,#ea580c);color:#ffffff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:10px;font-size:14px;font-weight:600;">
+      Potrdi in oceni izvajalca →
+    </a>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `✅ Izvajalec je označil nalogo "${naslov}" kot opravljeno`,
+    html: layout(body),
+  }).catch((err) => console.error("[email] taskCompleted:", err));
+}
+
+export async function sendTaskClosedEmail(opts: {
+  to: string;
+  naslov: string;
+  zvezdice: number;
+}): Promise<void> {
+  const { to, naslov, zvezdice } = opts;
+  const stars = "★".repeat(zvezdice) + "☆".repeat(5 - zvezdice);
+
+  const body = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#ffffff;">Naročnik je potrdil nalogo! 🎉</h1>
+    <p style="margin:0 0 28px;font-size:14px;color:#666666;">Odlično opravljeno delo!</p>
+
+    <div style="background-color:#1a1a1a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="margin-bottom:12px;">
+        <span style="font-size:16px;font-weight:600;color:#ffffff;">${naslov}</span>
+      </div>
+      <div style="background-color:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:14px 18px;">
+        <p style="margin:0;font-size:13px;color:#22c55e;font-weight:600;">Vaša ocena: ${stars} (${zvezdice}/5)</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#888888;">Naročnik je potrdil opravljeno nalogo in vas ocenil.</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:#888888;line-height:1.7;margin:0 0 28px;">
+      Zaslužek je bil dodan k vašemu skupnemu zaslužku. Oglejte si svojo statistiko na profilu.
+    </p>
+
+    <a href="${process.env.NEXTAUTH_URL}/profil"
+       style="display:block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#ffffff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:10px;font-size:14px;font-weight:600;">
+      Odpri profil →
+    </a>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `🎉 Naročnik je potrdil nalogo "${naslov}" — ${zvezdice}/5 ★`,
+    html: layout(body),
+  }).catch((err) => console.error("[email] taskClosed:", err));
+}
+
 export async function sendTaskRejectedEmail(opts: {
   to: string;
   naslov: string;

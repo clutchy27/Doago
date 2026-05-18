@@ -22,7 +22,7 @@ type Naloga = {
 };
 
 type Tab = "objavljene" | "sprejete" | "opravljene";
-type OcenjevanjeState = { nalogaId: string; naslov: string } | null;
+type ZakljucevanjeTask = { nalogaId: string; naslov: string; cena: number } | null;
 
 const KATEGORIJE = ["Hišna opravila", "Prevoz", "IT pomoč", "Pouk", "Vrtnarjenje", "Drugo"];
 const MESTA = ["Ljubljana", "Maribor", "Celje", "Kranj", "Velenje", "Koper", "Novo mesto", "Ptuj", "Murska Sobota", "Nova Gorica", "Domžale", "Kamnik", "Trbovlje", "Krško", "Postojna", "Slovenj Gradec", "Jesenice", "Škofja Loka", "Brežice", "Izola"];
@@ -32,6 +32,7 @@ const statusBarva: Record<string, string> = {
   caka_potrditev: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
   sprejeta: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   "plačano": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+  caka_zakljucek: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
   zaprta: "bg-[#1A1A1A] text-[#525252] border border-[#2A2A2A]",
 };
 
@@ -51,17 +52,21 @@ export default function MojeNalogePage() {
   const [napaka, setNapaka] = useState("");
   const [posiljam, setPosiljam] = useState(false);
 
-  // Rating modal
-  const [ocenjevanje, setOcenjevanje] = useState<OcenjevanjeState>(null);
-  const [zvezdice, setZvezdice] = useState(5);
-  const [komentar, setKomentar] = useState("");
-  const [oddajam, setOddajam] = useState(false);
-
   // Payment
   const [placam, setPlacam] = useState<string | null>(null);
 
-  // Approval modal
+  // Izvajalec approval modal (narocnik sees this when izvajalec applies)
   const [approvalTask, setApprovalTask] = useState<ApprovalTask | null>(null);
+
+  // Izvajalec: "Označi kot opravljeno"
+  const [oznacujem, setOznacujem] = useState<string | null>(null);
+
+  // Narocnik blocking modal: nalogo treba potrditi in oceniti (caka_zakljucek)
+  const [zakljucevanjeTask, setZakljucevanjeTask] = useState<ZakljucevanjeTask>(null);
+  const [zvezdiceZakljucek, setZvezdiceZakljucek] = useState(5);
+  const [komentarZakljucek, setKomentarZakljucek] = useState("");
+  const [oddajamZakljucek, setOddajamZakljucek] = useState(false);
+  const [napakaModa, setNapakaModa] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/prijava");
@@ -123,6 +128,36 @@ export default function MojeNalogePage() {
     return () => { cancelled = true; clearInterval(interval); };
   }, [status, mode]);
 
+  // Poll for caka_zakljucek tasks (narocnik only) — blocking rating modal
+  useEffect(() => {
+    if (status !== "authenticated" || mode !== "narocnik") return;
+    let cancelled = false;
+    const poll = () => {
+      fetch("/api/naloge?pogled=narocnik&tab=sprejete")
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return;
+          if (Array.isArray(data)) {
+            const caka = data.find((n: Naloga) => n.status === "caka_zakljucek");
+            setZakljucevanjeTask((prev) => {
+              if (caka && !prev) {
+                setZvezdiceZakljucek(5);
+                setKomentarZakljucek("");
+                setNapakaModa("");
+                return { nalogaId: caka.id, naslov: caka.naslov, cena: caka.cena };
+              }
+              if (!caka) return null;
+              return prev;
+            });
+          }
+        })
+        .catch(() => {});
+    };
+    poll();
+    const interval = setInterval(poll, 10000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [status, mode]);
+
   const objavi = async () => {
     if (!form.naslov || !form.opis || !form.cena) { setNapaka("Vsa polja so obvezna"); return; }
     setPosiljam(true);
@@ -170,19 +205,35 @@ export default function MojeNalogePage() {
     }
   };
 
-  const oddajOceno = async () => {
-    if (!ocenjevanje) return;
-    setOddajam(true);
-    const res = await fetch("/api/ocene", {
+  const oznaci = async (nalogaId: string) => {
+    setOznacujem(nalogaId);
+    const res = await fetch(`/api/naloge/${nalogaId}/opravljeno`, { method: "PATCH" });
+    if (res.ok) {
+      setNaloge((prev) => prev.map((n) => n.id === nalogaId ? { ...n, status: "caka_zakljucek" } : n));
+    }
+    setOznacujem(null);
+  };
+
+  const oddajZakljucek = async () => {
+    if (!zakljucevanjeTask || zvezdiceZakljucek < 1) return;
+    setOddajamZakljucek(true);
+    setNapakaModa("");
+    const res = await fetch(`/api/naloge/${zakljucevanjeTask.nalogaId}/zakljuci`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nalogaId: ocenjevanje.nalogaId, zvezde: zvezdice, komentar }),
+      body: JSON.stringify({ zvezdice: zvezdiceZakljucek, komentar: komentarZakljucek }),
     });
     if (res.ok) {
-      setNaloge((prev) => prev.filter((n) => n.id !== ocenjevanje.nalogaId));
-      setOcenjevanje(null);
+      setZakljucevanjeTask(null);
+      setLoading(true);
+      fetch(`/api/naloge?pogled=${mode}&tab=${tab}`)
+        .then((r) => r.json())
+        .then((data) => { setNaloge(Array.isArray(data) ? data : []); setLoading(false); });
+    } else {
+      const data = await res.json();
+      setNapakaModa(data.error || "Napaka pri zaključku");
     }
-    setOddajam(false);
+    setOddajamZakljucek(false);
   };
 
   const handleApprovalDone = () => {
@@ -315,12 +366,15 @@ export default function MojeNalogePage() {
                     )}
                     <h2 className="font-semibold text-white">{n.naslov}</h2>
                     <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${statusBarva[n.status] ?? "bg-[#1A1A1A] text-[#525252]"}`}>
-                      {n.status}
+                      {n.status === "caka_zakljucek" ? "čaka zaključek" : n.status}
                     </span>
                   </div>
                   <p className="text-[#A3A3A3] text-sm mb-3 line-clamp-2 leading-relaxed">{n.opis}</p>
                   {!isNarocnik && n.status === "caka_potrditev" && (
                     <p className="text-amber-400 text-xs mb-2">⏳ Čakaš na potrditev naročnika...</p>
+                  )}
+                  {!isNarocnik && n.status === "caka_zakljucek" && (
+                    <p className="text-teal-400 text-xs mb-2">⏳ Čakaš na potrditev naročnika...</p>
                   )}
                   <div className="flex gap-2 text-xs text-[#525252] flex-wrap items-center">
                     <span className="bg-[#242424] px-2.5 py-1 rounded-full">{n.kategorija}</span>
@@ -352,11 +406,24 @@ export default function MojeNalogePage() {
                   )}
 
                   {isNarocnik && n.status === "plačano" && (
+                    <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1.5 rounded-xl whitespace-nowrap">
+                      ⏳ Čaka izvajalca
+                    </span>
+                  )}
+
+                  {isNarocnik && n.status === "caka_zakljucek" && (
+                    <span className="text-xs bg-teal-500/10 text-teal-400 border border-teal-500/20 px-3 py-1.5 rounded-xl whitespace-nowrap">
+                      ✓ Opravljeno
+                    </span>
+                  )}
+
+                  {!isNarocnik && n.status === "plačano" && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); setOcenjevanje({ nalogaId: n.id, naslov: n.naslov }); setZvezdice(5); setKomentar(""); }}
-                      className="text-xs bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 px-3 py-1.5 rounded-xl hover:bg-[#22C55E]/20 transition-all duration-150 whitespace-nowrap"
+                      onClick={(e) => { e.stopPropagation(); oznaci(n.id); }}
+                      disabled={oznacujem === n.id}
+                      className="text-xs bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 px-3 py-1.5 rounded-xl hover:bg-[#22C55E]/20 transition-all duration-150 whitespace-nowrap disabled:opacity-50 font-semibold"
                     >
-                      ⭐ Oceni izvajalca
+                      {oznacujem === n.id ? "Označujem..." : "Označi kot opravljeno"}
                     </button>
                   )}
                 </div>
@@ -375,48 +442,68 @@ export default function MojeNalogePage() {
         />
       )}
 
-      {/* Rating modal */}
-      {ocenjevanje && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
+      {/* Blocking narocnik modal — potrdi in oceni (caka_zakljucek) */}
+      {zakljucevanjeTask && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[9999] px-4 backdrop-blur-md">
           <div className="bg-[#1A1A1A] border border-[#333333] rounded-2xl w-full max-w-md p-8 shadow-2xl shadow-black/60">
-            <h2 className="text-xl font-bold text-white mb-1 tracking-tight">Oceni izvajalca</h2>
-            <p className="text-[#525252] text-sm mb-7">
-              Naloga: <span className="text-[#A3A3A3]">{ocenjevanje.naslov}</span>
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 font-semibold">Naloga opravljena</span>
+            </div>
+            <h2 className="text-xl font-bold text-white mb-1 tracking-tight">Potrdi in oceni izvajalca</h2>
+            <p className="text-[#525252] text-sm mb-1">
+              Naloga: <span className="text-[#A3A3A3] font-medium">{zakljucevanjeTask.naslov}</span>
             </p>
+            <p className="text-[#525252] text-sm mb-7">
+              Izvajalec je označil nalogo kot opravljeno. Prosimo potrdite in ocenite izvajalca.
+            </p>
+
+            {napakaModa && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-5">
+                {napakaModa}
+              </div>
+            )}
+
+            {/* Stars */}
             <div className="mb-6">
-              <p className="text-xs text-[#525252] uppercase tracking-wider mb-3 font-semibold">Ocena</p>
+              <p className="text-xs text-[#525252] uppercase tracking-wider mb-3 font-semibold">Ocena (obvezno)</p>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <button key={s} onClick={() => setZvezdice(s)} className="focus:outline-none transition-all duration-150 hover:scale-110 active:scale-95">
-                    <svg className={`w-9 h-9 ${s <= zvezdice ? accentText : "text-[#2A2A2A]"} transition-colors duration-150`} fill="currentColor" viewBox="0 0 20 20">
+                  <button
+                    key={s}
+                    onClick={() => setZvezdiceZakljucek(s)}
+                    className="focus:outline-none transition-all duration-150 hover:scale-110 active:scale-95"
+                  >
+                    <svg
+                      className={`w-9 h-9 ${s <= zvezdiceZakljucek ? "text-[#F97316]" : "text-[#2A2A2A]"} transition-colors duration-150`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   </button>
                 ))}
               </div>
             </div>
-            <div className="mb-6">
+
+            {/* Comment */}
+            <div className="mb-7">
               <p className="text-xs text-[#525252] uppercase tracking-wider mb-2 font-semibold">Komentar (neobvezno)</p>
               <textarea
-                className={`${inputClass} resize-none w-full`}
+                className="w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent transition-all resize-none"
                 placeholder="Kratko mnenje o izvajalcu..."
                 rows={3}
-                value={komentar}
-                onChange={(e) => setKomentar(e.target.value)}
+                value={komentarZakljucek}
+                onChange={(e) => setKomentarZakljucek(e.target.value)}
               />
             </div>
-            <div className="flex gap-3">
-              <button onClick={() => setOcenjevanje(null)} className="flex-1 border border-[#333333] text-[#A3A3A3] py-3 rounded-xl font-medium hover:bg-[#242424] transition-all duration-150 text-sm">
-                Prekliči
-              </button>
-              <button
-                onClick={oddajOceno}
-                disabled={oddajam}
-                className={`flex-1 ${accentBg} ${accentHover} text-white py-3 rounded-xl font-semibold transition-all duration-150 disabled:opacity-50 text-sm shadow-lg ${accentShadow}`}
-              >
-                {oddajam ? "Oddajam..." : "Oddaj oceno"}
-              </button>
-            </div>
+
+            <button
+              onClick={oddajZakljucek}
+              disabled={oddajamZakljucek || zvezdiceZakljucek < 1}
+              className="w-full bg-[#F97316] hover:bg-orange-600 text-white py-3.5 rounded-xl font-semibold transition-all duration-150 disabled:opacity-50 text-sm shadow-lg hover:shadow-orange-500/25 hover:-translate-y-0.5"
+            >
+              {oddajamZakljucek ? "Potrjujem..." : "Potrdi in oceni"}
+            </button>
           </div>
         </div>
       )}
@@ -472,7 +559,6 @@ export default function MojeNalogePage() {
                 onChange={(e) => setForm({ ...form, ulica: e.target.value })}
               />
 
-              {/* Nujna toggle */}
               <button
                 type="button"
                 onClick={() => setForm({ ...form, nujna: !form.nujna })}
@@ -494,7 +580,6 @@ export default function MojeNalogePage() {
                 </div>
               </button>
 
-              {/* Profesionalna toggle */}
               <button
                 type="button"
                 onClick={() => setForm({ ...form, profesionalna: !form.profesionalna })}
