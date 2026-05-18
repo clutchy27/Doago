@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { pool } from "@/lib/db";
-import { sendTaskAcceptedEmail } from "@/lib/email";
+import { sendTaskAcceptedEmail, sendTaskConfirmedEmail, sendTaskRejectedEmail } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
@@ -57,7 +57,6 @@ export async function POST(
         );
       }
 
-      // Send email to naročnik (fire-and-forget)
       if (naloga.narocnikEmail && naloga.izvajalecIme) {
         sendTaskAcceptedEmail({
           to: naloga.narocnikEmail,
@@ -66,6 +65,14 @@ export async function POST(
           kategorija: naloga.kategorija,
           cena: naloga.cena,
           izvajalecIme: naloga.izvajalecIme,
+        }).catch(() => {});
+      }
+
+      if (naloga.izvajalecEmail && naloga.narocnikIme) {
+        sendTaskConfirmedEmail({
+          to: naloga.izvajalecEmail,
+          naslov: naloga.naslov,
+          narocnikIme: naloga.narocnikIme,
         }).catch(() => {});
       }
     } else {
@@ -85,6 +92,10 @@ export async function POST(
             naloga.id,
           ]
         );
+      }
+
+      if (naloga.izvajalecEmail) {
+        sendTaskRejectedEmail({ to: naloga.izvajalecEmail, naslov: naloga.naslov }).catch(() => {});
       }
     }
 

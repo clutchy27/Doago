@@ -185,3 +185,118 @@ export async function sendTaskAcceptedEmail(opts: {
     html: layout(body),
   }).catch((err) => console.error("[email] taskAccepted:", err));
 }
+
+export async function sendTaskAppliedEmail(opts: {
+  to: string;
+  izvajalecIme: string;
+  naslov: string;
+}): Promise<void> {
+  const { to, izvajalecIme, naslov } = opts;
+
+  const body = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#ffffff;">Nova prijava na nalogo! 🙋</h1>
+    <p style="margin:0 0 28px;font-size:14px;color:#666666;">Izvajalec se je prijavil na vašo nalogo.</p>
+
+    <div style="background-color:#1a1a1a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="margin-bottom:12px;">
+        <span style="font-size:16px;font-weight:600;color:#ffffff;">${naslov}</span>
+      </div>
+      <div style="background-color:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.15);border-radius:10px;padding:14px 18px;">
+        <p style="margin:0;font-size:13px;color:#f97316;font-weight:600;">👷 ${izvajalecIme}</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#888888;">želi sprejeti vašo nalogo.</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:#888888;line-height:1.7;margin:0 0 28px;">
+      Prijavite se v aplikacijo in si oglejte profil izvajalca. Prijavo lahko potrdite ali zavrnete.
+    </p>
+
+    <a href="${process.env.NEXTAUTH_URL}/naloge/moje"
+       style="display:block;background:linear-gradient(135deg,#f97316,#ea580c);color:#ffffff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:10px;font-size:14px;font-weight:600;">
+      Potrdi ali zavrni prijavo →
+    </a>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `🙋 ${izvajalecIme} se je prijavil na vašo nalogo "${naslov}"`,
+    html: layout(body),
+  }).catch((err) => console.error("[email] taskApplied:", err));
+}
+
+export async function sendTaskConfirmedEmail(opts: {
+  to: string;
+  naslov: string;
+  narocnikIme: string;
+}): Promise<void> {
+  const { to, naslov, narocnikIme } = opts;
+
+  const body = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#ffffff;">Prijava potrjena! ✅</h1>
+    <p style="margin:0 0 28px;font-size:14px;color:#666666;">Naročnik je potrdil vašo prijavo.</p>
+
+    <div style="background-color:#1a1a1a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="margin-bottom:12px;">
+        <span style="font-size:16px;font-weight:600;color:#ffffff;">${naslov}</span>
+      </div>
+      <div style="background-color:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:14px 18px;">
+        <p style="margin:0;font-size:13px;color:#22c55e;font-weight:600;">🎉 ${narocnikIme} je potrdil vašo prijavo</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#888888;">Stopite v kontakt in se dogovorite za začetek dela.</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:#888888;line-height:1.7;margin:0 0 28px;">
+      Nalogo boste našli med svojimi sprejetimi nalogami. Ko bo opravljena, vas bo naročnik ocenil.
+    </p>
+
+    <a href="${process.env.NEXTAUTH_URL}/naloge/moje"
+       style="display:block;background:linear-gradient(135deg,#f97316,#ea580c);color:#ffffff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:10px;font-size:14px;font-weight:600;">
+      Odpri moje naloge →
+    </a>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `✅ Prijava potrjena za nalogo "${naslov}"`,
+    html: layout(body),
+  }).catch((err) => console.error("[email] taskConfirmed:", err));
+}
+
+export async function sendTaskRejectedEmail(opts: {
+  to: string;
+  naslov: string;
+}): Promise<void> {
+  const { to, naslov } = opts;
+
+  const body = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#ffffff;">Prijava ni bila potrjena</h1>
+    <p style="margin:0 0 28px;font-size:14px;color:#666666;">Naročnik tokrat ni izbral vaše prijave.</p>
+
+    <div style="background-color:#1a1a1a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+      <div style="margin-bottom:12px;">
+        <span style="font-size:16px;font-weight:600;color:#ffffff;">${naslov}</span>
+      </div>
+      <div style="background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px 18px;">
+        <p style="margin:0;font-size:13px;color:#a3a3a3;">Naloga je spet odprta za prijave. Poiščite druge priložnosti na platformi.</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:#888888;line-height:1.7;margin:0 0 28px;">
+      Ne obupajte — na platformi je vsak dan novih nalog. Poskusite z drugo nalogo.
+    </p>
+
+    <a href="${process.env.NEXTAUTH_URL}/naloge/vse"
+       style="display:block;background:linear-gradient(135deg,#f97316,#ea580c);color:#ffffff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:10px;font-size:14px;font-weight:600;">
+      Poišči druge naloge →
+    </a>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Prijava za nalogo "${naslov}" ni bila potrjena`,
+    html: layout(body),
+  }).catch((err) => console.error("[email] taskRejected:", err));
+}

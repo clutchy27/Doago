@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { pool } from "@/lib/db";
+import { sendTaskAppliedEmail } from "@/lib/email";
 
 const initPromise = pool.query(`
     CREATE TABLE IF NOT EXISTS "Obvestilo" (
@@ -93,6 +94,12 @@ export async function PATCH(
     );
     const izvajalecIme = izvajalecRows[0]?.ime ?? "Izvajalec";
 
+    const { rows: narocnikRows } = await pool.query(
+      `SELECT email FROM "User" WHERE id = $1`,
+      [naloga.narocnikId]
+    );
+    const narocnikEmail = narocnikRows[0]?.email as string | undefined;
+
     // Obvestilo za naročnika
     await pool.query(
       `INSERT INTO "Obvestilo" (id, besedilo, "userId", "nalogaId")
@@ -104,6 +111,10 @@ export async function PATCH(
         naloga.id,
       ]
     );
+
+    if (narocnikEmail) {
+      sendTaskAppliedEmail({ to: narocnikEmail, izvajalecIme, naslov: naloga.naslov }).catch(() => {});
+    }
 
     return NextResponse.json(naloga);
   } catch (err) {
