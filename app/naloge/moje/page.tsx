@@ -68,6 +68,9 @@ export default function MojeNalogePage() {
   const [oddajamZakljucek, setOddajamZakljucek] = useState(false);
   const [napakaModa, setNapakaModa] = useState("");
 
+  // Success toast
+  const [sporocilo, setSporocilo] = useState<string | null>(null);
+
   useEffect(() => {
     if (status === "unauthenticated") router.push("/prijava");
   }, [status, router]);
@@ -224,7 +227,10 @@ export default function MojeNalogePage() {
       body: JSON.stringify({ zvezdice: zvezdiceZakljucek, komentar: komentarZakljucek }),
     });
     if (res.ok) {
+      const naslovNaloge = zakljucevanjeTask.naslov;
       setZakljucevanjeTask(null);
+      setSporocilo(`Ocena oddana! Naloga "${naslovNaloge}" je uspešno zaprta.`);
+      setTimeout(() => setSporocilo(null), 6000);
       setLoading(true);
       fetch(`/api/naloge?pogled=${mode}&tab=${tab}`)
         .then((r) => r.json())
@@ -313,6 +319,16 @@ export default function MojeNalogePage() {
             </button>
           ))}
         </div>
+
+        {/* Success toast */}
+        {sporocilo && (
+          <div className="mb-5 bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] rounded-xl px-4 py-3 text-sm flex items-center gap-2">
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            {sporocilo}
+          </div>
+        )}
 
         {/* Task list */}
         {loading ? (
