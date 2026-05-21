@@ -30,7 +30,7 @@ export default function ProfilSetupPage() {
     if (status === "unauthenticated") router.push("/prijava");
     if (status === "authenticated") {
       const vloga = (session?.user as any)?.vloga;
-      if (vloga !== "izvajalec") router.replace("/naloge");
+      if (vloga !== "izvajalec" && vloga !== "student") router.replace("/naloge");
     }
   }, [status, session, router]);
 

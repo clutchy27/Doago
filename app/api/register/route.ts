@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Vsa polja so obvezna" }, { status: 400 });
     }
 
-    const vlogaValue = vloga === "izvajalec" ? "izvajalec" : vloga === "student" ? "student" : "narocnik";
+    const vlogaValue = vloga === "izvajalec" ? "izvajalec" : vloga === "student" ? "student" : "navaden";
 
     if (vlogaValue === "izvajalec") {
       if (!sp || !sp.ime || !sp.priimek || !sp.davcnaStevilka || !sp.iban || !sp.naslov) {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, requiresProfileSetup: vlogaValue === "izvajalec" });
+    return NextResponse.json({ success: true, requiresProfileSetup: vlogaValue === "izvajalec" || vlogaValue === "student" });
   } catch (err) {
     console.error("Registration error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
     return NextResponse.json({ error: "Napaka na strežniku" }, { status: 500 });

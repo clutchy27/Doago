@@ -12,14 +12,14 @@ type SpForm = {
   naslov: string;
 };
 
-type Vloga = "narocnik" | "izvajalec" | "student";
+type Vloga = "navaden" | "izvajalec" | "student";
 
 const INPUT_CLASS =
   "w-full bg-[#242424] border border-[#333333] rounded-xl px-4 py-3 text-white placeholder-[#525252] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all";
 
 export default function Register() {
   const router = useRouter();
-  const [vloga, setVloga] = useState<Vloga>("narocnik");
+  const [vloga, setVloga] = useState<Vloga>("navaden");
   const [form, setForm] = useState({ ime: "", email: "", geslo: "" });
   const [spForm, setSpForm] = useState<SpForm>({ ime: "", priimek: "", davcnaStevilka: "", iban: "", naslov: "" });
   const [napaka, setNapaka] = useState("");
@@ -71,7 +71,7 @@ export default function Register() {
   const isGreen = vloga === "izvajalec" || vloga === "student";
   const accentBg = isGreen ? "rgba(34,197,94,0.08)" : "rgba(249,115,22,0.08)";
   const accentBorder = isGreen ? "rgba(34,197,94,0.15)" : "rgba(249,115,22,0.15)";
-  const icon = vloga === "narocnik" ? "🚀" : vloga === "student" ? "🎓" : "🛠️";
+  const icon = vloga === "navaden" ? "🚀" : vloga === "student" ? "🎓" : "🛠️";
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] flex flex-col">
@@ -124,7 +124,7 @@ export default function Register() {
               <div className="grid grid-cols-3 gap-2 bg-[#111111] rounded-xl p-1 border border-[#2A2A2A]">
                 {(
                   [
-                    { key: "narocnik", label: "Naročnik" },
+                    { key: "navaden", label: "Osebni račun" },
                     { key: "izvajalec", label: "Izvajalec (s.p.)" },
                     { key: "student", label: "Izvajalec (študent)" },
                   ] as { key: Vloga; label: string }[]
@@ -136,7 +136,7 @@ export default function Register() {
                     className="py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-150 leading-tight"
                     style={
                       vloga === key
-                        ? key === "narocnik"
+                        ? key === "navaden"
                           ? { background: "rgba(249,115,22,0.15)", color: "#F97316", border: "1px solid rgba(249,115,22,0.3)" }
                           : { background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)" }
                         : { color: "#525252", border: "1px solid transparent" }
@@ -240,13 +240,13 @@ export default function Register() {
                 </div>
               )}
 
-              {vloga === "narocnik" && (
+              {vloga === "navaden" && (
                 <div
                   className="rounded-xl px-4 py-3 text-center"
                   style={{ background: accentBg, border: `1px solid ${accentBorder}` }}
                 >
-                  <p className="text-orange-400 text-xs font-bold tracking-wide">Naročnik</p>
-                  <p className="text-[#525252] text-xs mt-1">Objaviš nalogo, izvajalec jo opravi</p>
+                  <p className="text-orange-400 text-xs font-bold tracking-wide">Osebni račun</p>
+                  <p className="text-[#525252] text-xs mt-1">Objavljaj in sprejemaj naloge</p>
                 </div>
               )}
 
@@ -256,7 +256,7 @@ export default function Register() {
                   style={{ background: accentBg, border: `1px solid ${accentBorder}` }}
                 >
                   <p className="text-green-400 text-xs font-bold tracking-wide">Izvajalec (študent)</p>
-                  <p className="text-[#525252] text-xs mt-1">Sprejemaš naloge prek študentskega servisa</p>
+                  <p className="text-[#525252] text-xs mt-1">Objavljaj in sprejemaj naloge kot študent</p>
                 </div>
               )}
 

@@ -13,7 +13,7 @@ model User {
   ime                             String
   email                           String      @unique
   geslo                           String
-  vloga                           String      @default("narocnik")
+  vloga                           String      @default("navaden")
   createdAt                       DateTime    @default(now())
   nalogaKotIzvajalec              Naloga[]    @relation("IzvajalecNaloge")
   nalogaKotNarocnik               Naloga[]    @relation("NarocnikNaloge")
@@ -21,6 +21,7 @@ model User {
   Rating_Rating_izvajalecIdToUser Rating[]    @relation("Rating_izvajalecIdToUser")
   Rating_Rating_narocnikIdToUser  Rating[]    @relation("Rating_narocnikIdToUser")
   spPodatki                       SpPodatki?
+  studentPodatki                  StudentPodatki?
   sporocila                       Sporocilo[]
 }
 
@@ -41,6 +42,19 @@ model SpPodatki {
   skupniZasluzek Float    @default(0)
   steviloOcen    Int      @default(0)
   povprecnaOcena Float    @default(0)
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+model StudentPodatki {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  opis           String?
+  kategorije     String[]
+  mesta          String[]
+  profilUrejen   Boolean  @default(false)
+  steviloOcen    Int      @default(0)
+  povprecnaOcena Float    @default(0)
+  skupniZasluzek Float    @default(0)
   user           User     @relation(fields: [userId], references: [id])
 }
 
