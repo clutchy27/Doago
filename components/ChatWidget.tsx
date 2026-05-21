@@ -40,10 +40,17 @@ export default function ChatWidget() {
   const [sporocila, setSporocila] = useState<Sporocilo[]>([]);
   const [novo, setNovo] = useState("");
   const [posiljam, setPosiljam] = useState(false);
-  const [seenCounts, setSeenCounts] = useState<Record<string, number>>({});
+  const [seenCounts, setSeenCounts] = useState<Record<string, number>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem("chatSeenCounts");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const initializedRef = useRef(false);
 
   const userId = (session?.user as any)?.id as string | undefined;
 
@@ -53,12 +60,6 @@ export default function ChatWidget() {
       .then((r) => r.json())
       .then((data: ChatTask[]) => {
         if (!Array.isArray(data)) return;
-        if (!initializedRef.current) {
-          const initial: Record<string, number> = {};
-          data.forEach((t) => { initial[t.id] = t.messageCount; });
-          setSeenCounts(initial);
-          initializedRef.current = true;
-        }
         setTasks(data);
       });
   }, [status]);
@@ -82,6 +83,10 @@ export default function ChatWidget() {
     const interval = setInterval(fetchSporocila, 3000);
     return () => clearInterval(interval);
   }, [activeTaskId, view, fetchSporocila]);
+
+  useEffect(() => {
+    localStorage.setItem("chatSeenCounts", JSON.stringify(seenCounts));
+  }, [seenCounts]);
 
   useEffect(() => {
     if (view === "chat") setTimeout(() => inputRef.current?.focus(), 50);
@@ -133,8 +138,7 @@ export default function ChatWidget() {
 
   const taskUnread = (t: ChatTask) => {
     const count = Math.max(0, t.messageCount - (seenCounts[t.id] ?? 0));
-    // Ne prikaži badge za lastna sporočila (vključno s sistemskimi od strežnika)
-    if (count > 0 && t.latestMessageAvtorId != null && t.latestMessageAvtorId === userId) return 0;
+    if (count > 0 && !isSystemMsg(t.latestMessage ?? "") && t.latestMessageAvtorId === userId) return 0;
     return count;
   };
 
