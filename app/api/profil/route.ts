@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
     const user = userRows[0];
 
-    const [narocnikRes, izvajalecRes, oceneRes] = await Promise.all([
+    const [narocnikRes, izvajalecRes, oceneRes, aktivneRes] = await Promise.all([
       pool.query(
         `SELECT
           COUNT(*) FILTER (WHERE status = 'zaprta') AS stevilo_opravljenih,
@@ -49,6 +49,11 @@ export async function GET(req: NextRequest) {
          FROM "Rating" WHERE "izvajalecId" = $1`,
         [userId]
       ),
+      pool.query(
+        `SELECT COUNT(*) AS stevilo_aktivnih
+         FROM "Naloga" WHERE "izvajalecId" = $1 AND status IN ('sprejeta', 'plačano', 'caka_zakljucek')`,
+        [userId]
+      ),
     ]);
 
     return NextResponse.json({
@@ -65,6 +70,7 @@ export async function GET(req: NextRequest) {
         skupniZasluzek: parseFloat(izvajalecRes.rows[0].zasluzek) || 0,
         povprecnaOcena: oceneRes.rows[0].povprecje ? parseFloat(oceneRes.rows[0].povprecje) : null,
         steviloOcen: parseInt(oceneRes.rows[0].stevilo_ocen) || 0,
+        steviloAktivnihNalog: parseInt(aktivneRes.rows[0].stevilo_aktivnih) || 0,
       },
     });
   } catch (err) {

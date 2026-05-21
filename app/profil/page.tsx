@@ -29,6 +29,7 @@ type Profil = {
     skupniZasluzek: number;
     povprecnaOcena: number | null;
     steviloOcen: number;
+    steviloAktivnihNalog: number;
   };
 };
 
@@ -538,26 +539,32 @@ export default function ProfilPage() {
               </div>
             )}
 
-            {/* Izvajalec stats */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">Statistike</span>
+            {/* Izvajalec stats — only for SP izvajalec */}
+            {isIzvajalec && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">Statistike izvajalca</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
+                    <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Opravljene</p>
+                    <p className="text-2xl font-bold text-white">{profil.izvajalec.steviloOpravljenih}</p>
+                  </div>
+                  <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
+                    <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Aktivne</p>
+                    <p className="text-2xl font-bold text-white">{profil.izvajalec.steviloAktivnihNalog}</p>
+                  </div>
+                  <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 col-span-2 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
+                    <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Skupni zaslužek</p>
+                    <p className="text-xl font-bold text-green-500">€ {profil.izvajalec.skupniZasluzek.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 col-span-2 hover:border-white/8 transition-all duration-200">
+                    <p className="text-gray-600 text-xs uppercase tracking-wider mb-2.5">Povprečna ocena</p>
+                    <Zvezdice ocena={profil.izvajalec.povprecnaOcena} stevilo={profil.izvajalec.steviloOcen} />
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
-                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Opravljene</p>
-                  <p className="text-2xl font-bold text-white">{profil.izvajalec.steviloOpravljenih}</p>
-                </div>
-                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 hover:border-white/8 hover:-translate-y-0.5 transition-all duration-200">
-                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-1.5">Skupni zaslužek</p>
-                  <p className="text-xl font-bold text-green-500">{profil.izvajalec.skupniZasluzek.toFixed(0)} €</p>
-                </div>
-                <div className="bg-[#111111] border border-white/5 rounded-2xl p-4 sm:p-5 col-span-2 hover:border-white/8 transition-all duration-200">
-                  <p className="text-gray-600 text-xs uppercase tracking-wider mb-2.5">Povprečna ocena</p>
-                  <Zvezdice ocena={profil.izvajalec.povprecnaOcena} stevilo={profil.izvajalec.steviloOcen} />
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Opravljene naloge (izvajalec) */}
             {opravljeneIzvajalec.length > 0 && (
