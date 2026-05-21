@@ -112,6 +112,22 @@ export async function PATCH(
       ]
     );
 
+    // Sistemsko sporočilo — začne pogovor (samo enkrat)
+    await pool.query(
+      `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId")
+       SELECT $1, $2, $3, $4
+       WHERE NOT EXISTS (
+         SELECT 1 FROM "Sporocilo"
+         WHERE "nalogaId" = $4 AND besedilo LIKE '💬 Izvajalec%'
+       )`,
+      [
+        crypto.randomUUID(),
+        "💬 Izvajalec se je prijavil na vašo nalogo. Lahko začnete s pogovorom.",
+        izvajalecId,
+        naloga.id,
+      ]
+    );
+
     if (narocnikEmail) {
       sendTaskAppliedEmail({ to: narocnikEmail, izvajalecIme, naslov: naloga.naslov }).catch(() => {});
     }

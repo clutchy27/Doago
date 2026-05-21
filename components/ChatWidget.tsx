@@ -12,6 +12,7 @@ type ChatTask = {
   izvajalec: { ime: string } | null;
   messageCount: number;
   latestMessage: string | null;
+  latestMessageAvtorId: string | null;
 };
 
 type Sporocilo = {
@@ -24,6 +25,10 @@ type Sporocilo = {
 
 function formatCas(iso: string) {
   return new Date(iso).toLocaleTimeString("sl-SI", { hour: "2-digit", minute: "2-digit" });
+}
+
+function isSystemMsg(besedilo: string) {
+  return besedilo.startsWith("💬") || besedilo.startsWith("🤝") || besedilo.startsWith("✅");
 }
 
 export default function ChatWidget() {
@@ -126,10 +131,14 @@ export default function ChatWidget() {
 
   if (status !== "authenticated" || tasks.length === 0) return null;
 
-  const totalUnread = tasks.reduce(
-    (sum, t) => sum + Math.max(0, t.messageCount - (seenCounts[t.id] ?? 0)),
-    0
-  );
+  const taskUnread = (t: ChatTask) => {
+    const count = Math.max(0, t.messageCount - (seenCounts[t.id] ?? 0));
+    // Ne prikaži badge za lastna sporočila (vključno s sistemskimi od strežnika)
+    if (count > 0 && t.latestMessageAvtorId != null && t.latestMessageAvtorId === userId) return 0;
+    return count;
+  };
+
+  const totalUnread = tasks.reduce((sum, t) => sum + taskUnread(t), 0);
   const activeTask = tasks.find((t) => t.id === activeTaskId);
 
   return (
@@ -172,7 +181,6 @@ export default function ChatWidget() {
           {view === "list" && (
             <div className="flex-1 overflow-y-auto">
               {tasks.map((t) => {
-                const unread = Math.max(0, t.messageCount - (seenCounts[t.id] ?? 0));
                 return (
                   <button
                     key={t.id}
@@ -185,9 +193,9 @@ export default function ChatWidget() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
                         <p className="text-white text-sm font-semibold truncate">{t.naslov}</p>
-                        {unread > 0 && (
+                        {taskUnread(t) > 0 && (
                           <span className="bg-[#F97316] text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center shrink-0 font-bold">
-                            {unread > 9 ? "9+" : unread}
+                            {taskUnread(t) > 9 ? "9+" : taskUnread(t)}
                           </span>
                         )}
                       </div>
@@ -211,10 +219,10 @@ export default function ChatWidget() {
                   <p className="text-[#525252] text-sm text-center mt-12">Še ni sporočil. Začnite pogovor.</p>
                 ) : (
                   sporocila.map((s) => {
-                    if (!s.avtorId) {
+                    if (!s.avtorId || isSystemMsg(s.besedilo)) {
                       return (
                         <div key={s.id} className="flex justify-center my-1">
-                          <span className="text-[11px] text-[#525252] bg-[#1E1E1E] border border-[#2A2A2A] rounded-full px-3 py-1 text-center">
+                          <span className="text-[11px] text-[#525252] bg-[#1E1E1E] border border-[#2A2A2A] rounded-full px-3 py-1 text-center italic">
                             {s.besedilo}
                           </span>
                         </div>

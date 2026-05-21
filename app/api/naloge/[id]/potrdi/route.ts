@@ -57,6 +57,22 @@ export async function POST(
         );
       }
 
+      // Sistemsko sporočilo — obvesti izvajalca (samo enkrat)
+      await pool.query(
+        `INSERT INTO "Sporocilo" (id, besedilo, "avtorId", "nalogaId")
+         SELECT $1, $2, $3, $4
+         WHERE NOT EXISTS (
+           SELECT 1 FROM "Sporocilo"
+           WHERE "nalogaId" = $4 AND besedilo LIKE '🤝 Naročnik%'
+         )`,
+        [
+          crypto.randomUUID(),
+          "🤝 Naročnik je potrdil vašo prijavo! Zmenita se za podrobnosti.",
+          narocnikId,
+          id,
+        ]
+      );
+
       if (naloga.narocnikEmail && naloga.izvajalecIme) {
         sendTaskAcceptedEmail({
           to: naloga.narocnikEmail,
